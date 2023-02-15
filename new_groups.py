@@ -56,7 +56,7 @@ def get_settings():
     
     return settings
 
-
+get_settings()
 
 def get_breakout_participants_list(breakout_window):
     participant_list = breakout_window.descendants(control_type="ListItem")
@@ -278,7 +278,7 @@ def create_new_rooms(breakout_window):
 
 def create_new_groups():
     # Initiate
-    get_settings()
+
     try:
         app = pywinauto.Application(backend="uia").connect(
             title_re="Breakout Sessions - Nicht begonnen")
