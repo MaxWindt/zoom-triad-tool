@@ -73,7 +73,7 @@ def get_breakout_participants_list(breakout_window):
 def main():
     
     #initialize the breakout window
-
+    get_settings()
     app = pywinauto.Application(backend="uia").connect(
         title_re="Breakout Sessions - Nicht begonnen")
 
@@ -123,7 +123,7 @@ def main():
         NT_ids = np.append(NT_ids,np.flatnonzero(np.chararray.find(name_list_only, "NT")!= -1))
     else:
         # if all rooms are empty
-        create_new_groups(group_size,placeholder_rooms)
+        create_new_groups()
 
     last_room = room_nr
     first_empty_room = name_list[-1][0]+1  # last full room + 1
@@ -191,5 +191,5 @@ def main():
     print()
 
 if __name__ == "__main__":
-    get_settings()
+
     main()
