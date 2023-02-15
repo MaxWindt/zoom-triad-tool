@@ -7,11 +7,11 @@ dependencies:
   # If available, always prefer the conda version of a package, installation will be faster and more efficient.
   # https://anaconda.org/search  
   - python
-  - numpy
-  - pyautogui
-  - pywinauto
-  - pyyaml
-  - pyperclip
+  - numpy==1.24.1
+  - PyAutoGUI==0.9.53
+  - pyperclip==1.8.2
+  - pywinauto==0.6.8
+  - PyYAML==6.0
   #- pip
 
   #- pip:
