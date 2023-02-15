@@ -276,8 +276,9 @@ def create_new_rooms(breakout_window):
         exit()
 
 
-def create_new_groups(group_size, placeholder_rooms):
+def create_new_groups():
     # Initiate
+    get_settings()
     try:
         app = pywinauto.Application(backend="uia").connect(
             title_re="Breakout Sessions - Nicht begonnen")
@@ -321,8 +322,8 @@ def create_new_groups(group_size, placeholder_rooms):
 
 
 if __name__ == "__main__":
-    get_settings()
-    create_new_groups(group_size, placeholder_rooms)
+
+    create_new_groups()
 
     # participant_list = np.load("300_participants_coregroup.npy")
     # hosts, notriad, participants_in_rooms = create_groups(participant_list)
