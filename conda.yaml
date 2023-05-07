@@ -12,7 +12,7 @@ dependencies:
   - pyperclip==1.8.2
   - pywinauto==0.6.8
   - PyYAML==6.0
-  - pysimplegui==4.60.4 
+  #- pysimplegui==4.60.4 
   - pip
 
   - pip:
