@@ -287,7 +287,8 @@ def create_new_groups():
         exit()
     breakout_window = app.window(
         title="Breakout Sessions - Nicht begonnen").wrapper_object()
-    create_new_rooms(breakout_window)
+
+    # create_new_rooms(breakout_window)
 
     # get the start time
     st = time.time()
