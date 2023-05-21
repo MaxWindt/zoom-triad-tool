@@ -9,54 +9,7 @@ import pyautogui
 import pyperclip
 import pywinauto
 from pywinauto.keyboard import send_keys
-import yaml
 
-def get_settings():
-    try:
-        with open('settings.txt') as f:
-            settings = yaml.safe_load(f)
-    except:
-        print("Error loading settings, loading defaults")
-        settings = {# Version 0.1
-                    "group_size" : 3,
-                    "minimal_group" : 4,
-                    "placeholder_rooms" : 5,
-                    "activate_language1" : True,
-                    "activate_language2" : True,
-                    "add_universal_to_language1" : False,
-                    "add_universal_to_language2" : False,
-                    "tags_nt":["Triad", "TRIAD", "NT", "triad","tirad","^nt "],
-                    "tags_hosts":["Host", ".:.", "Team"],
-                    "tags_lang1":["DE", "De-","De ","^de ","^de/","D E "],
-                    "tags_lang2":["EN", "En-", "En ", "ES","SP"]}
-        with open('settings.txt', 'w') as f:
-            yaml.dump(settings, f, sort_keys=False, default_flow_style=False)
-
-
-    global group_size
-    global minimal_group
-    global placeholder_rooms
-    global toggle_language
-    global add_universal_to_language
-    global tags_nt
-    global tags_hosts
-    global tags_lang1
-    global tags_lang2
-    
-
-    group_size = settings["group_size"]
-    minimal_group = settings["minimal_group"]
-    placeholder_rooms = settings["placeholder_rooms"]
-    toggle_language = [settings["activate_language1"],settings["activate_language2"]]
-    add_universal_to_language = [settings["add_universal_to_language1"],settings["add_universal_to_language2"]]
-    tags_nt = settings["tags_nt"]
-    tags_hosts = settings["tags_hosts"]
-    tags_lang1 = settings["tags_lang1"]
-    tags_lang2 = settings["tags_lang2"]
-    
-    return settings
-
-get_settings()
 
 def get_breakout_participants_list(breakout_window):
     participant_list = breakout_window.descendants(control_type="ListItem")
@@ -97,7 +50,29 @@ def split_into_groups_of(lst, group_size):
     return split_list
 
 
-def create_groups(participant_list):
+def create_groups(participant_list,settings):
+
+    global group_size
+    global minimal_group
+    global placeholder_rooms
+    global toggle_language
+    global add_universal_to_language
+    global tags_nt
+    global tags_hosts
+    global tags_lang1
+    global tags_lang2
+    
+
+    group_size = settings["group_size"]
+    minimal_group = settings["minimal_group"]
+    placeholder_rooms = settings["placeholder_rooms"]
+    language1_active = settings["activate_language1"]
+    language2_active = settings["activate_language2"]
+    add_universal_to_language = [settings["add_universal_to_language1"],settings["add_universal_to_language2"]]
+    tags_nt = settings["tags_nt"]
+    tags_hosts = settings["tags_hosts"]
+    tags_lang1 = settings["tags_lang1"]
+    tags_lang2 = settings["tags_lang2"]
 
     notriad = find_name(participant_list, tags_nt)
     hosts = find_name(participant_list, tags_hosts)
@@ -138,9 +113,9 @@ def create_groups(participant_list):
     lang2_split = split_into_groups_of(shuffle(lang2_final), group_size)
     # use languages according to toggle_language
     participants_in_groups = []
-    if toggle_language[0]:
+    if language1_active:
         participants_in_groups.extend(lang1_split)
-    if toggle_language[1]:
+    if language2_active:
         participants_in_groups.extend(lang2_split)
 
     # print(participants_in_groups)
@@ -276,7 +251,7 @@ def create_new_rooms(breakout_window):
         exit()
 
 
-def create_new_groups():
+def create_new_groups(settings):
     # Initiate
 
     try:
@@ -297,7 +272,7 @@ def create_new_groups():
     breakout_buttons[1].click()
     participant_list = get_breakout_participants_list(breakout_window)
     # participant_list = np.load("300_participants_coregroup.npy")
-    hosts, notriad, participants_in_rooms = create_groups(participant_list)
+    hosts, notriad, participants_in_rooms = create_groups(participant_list,settings)
     print()
     et1 = time.time()
     # get the start time
