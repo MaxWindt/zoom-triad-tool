@@ -9,50 +9,6 @@ from new_groups import create_groups, assign_participants,room_buttons_only, cre
 # get the start time
 st = time.time()
 
-def get_settings():
-    try:
-        with open('settings.txt') as f:
-            settings = yaml.safe_load(f)
-    except:
-        print("Error loading settings, loading defaults")
-        settings = {# Version 0.1
-                    "group_size" : 3,
-                    "minimal_group" : 4,
-                    "placeholder_rooms" : 5,
-                    "activate_language1" : True,
-                    "activate_language2" : True,
-                    "add_universal_to_language1" : False,
-                    "add_universal_to_language2" : False,
-                    "tags_nt":["Triad", "TRIAD", "NT", "triad","tirad","^nt "],
-                    "tags_hosts":["Host", ".:.", "Team"],
-                    "tags_lang1":["DE", "De-","De ","^de ","^de/","D E "],
-                    "tags_lang2":["EN", "En-", "En ", "ES","SP"]}
-        with open('settings.txt', 'w') as f:
-            yaml.dump(settings, f, sort_keys=False, default_flow_style=False)
-
-
-    global group_size
-    global minimal_group
-    global placeholder_rooms
-    global toggle_language
-    global add_universal_to_language
-    global tags_nt
-    global tags_hosts
-    global tags_lang1
-    global tags_lang2
-    
-
-    group_size = settings["group_size"]
-    minimal_group = settings["minimal_group"]
-    placeholder_rooms = settings["placeholder_rooms"]
-    toggle_language = [settings["activate_language1"],settings["activate_language2"]]
-    add_universal_to_language = [settings["add_universal_to_language1"],settings["add_universal_to_language2"]]
-    tags_nt = settings["tags_nt"]
-    tags_hosts = settings["tags_hosts"]
-    tags_lang1 = settings["tags_lang1"]
-    tags_lang2 = settings["tags_lang2"]
-    
-    return settings
 
 def get_breakout_participants_list(breakout_window):
     participant_list = breakout_window.descendants(control_type="ListItem")
@@ -70,13 +26,14 @@ def get_breakout_participants_list(breakout_window):
 
 # main program
 
-def main():
+def main(settings):
     
     #initialize the breakout window
-    get_settings()
-    app = pywinauto.Application(backend="uia").connect(
+    try:
+        app = pywinauto.Application(backend="uia").connect(
         title_re="Breakout Sessions - Nicht begonnen")
-
+    except:
+        raise Exception("Please open the breakout window with enough empty rooms") 
     breakout_window = app.window(
         title="Breakout Sessions - Nicht begonnen").wrapper_object()
     et1 = time.time()
@@ -115,7 +72,7 @@ def main():
         # create a name-only list
         name_list_only.extend([name_list[x][2]])
         # add single-participant-rooms to no_triad_rooms
-        if name_list[x][1] < group_size:  # mark room to be cleaned if room < then group_size
+        if name_list[x][1] < settings["group_size"]:  # mark room to be cleaned if room < then group_size
             rooms_to_be_cleaned.extend([[name_list[x][0], name_list[x][1]]])
     #  TODO: check for added names from changes in active breakout.py since new_groups.py
     if name_list_only != []:
@@ -123,7 +80,7 @@ def main():
         NT_ids = np.append(NT_ids,np.flatnonzero(np.chararray.find(name_list_only, "NT")!= -1))
     else:
         # if all rooms are empty
-        create_new_groups()
+        create_new_groups(settings)
 
     last_room = room_nr
     first_empty_room = name_list[-1][0]+1  # last full room + 1
@@ -161,7 +118,7 @@ def main():
     participant_list = get_breakout_participants_list(breakout_window) 
 
     if participant_list != []: 
-        hosts, notriad, participants_in_rooms = create_groups(participant_list) 
+        hosts, notriad, participants_in_rooms = create_groups(participant_list,settings) 
 
         for i in range(len(participants_in_rooms)): 
             try: 
