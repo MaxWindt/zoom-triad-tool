@@ -2,6 +2,7 @@ import flet as ft
 import yaml
 import main
 import webbrowser
+import timer
 
 def safe_gui_settings(e):
     old_settings = get_settings()
@@ -58,6 +59,8 @@ def gui(page: ft.Page):
         )
     def open_settings(e):
         webbrowser.open("settings.txt")
+    def open_timer(e):
+        timer.main()
     def button_clicked(e):
         b.disabled = True
         t.value = "working... do not interrupt!"
@@ -106,6 +109,29 @@ def gui(page: ft.Page):
             )
         )
     )
+
+    
+    page.add(ft.Card(
+            content=ft.Container(
+
+                content=ft.Column(
+                    [
+
+                        ft.ListTile(
+			
+                            
+                            leading=ft.Icon(ft.icons.AV_TIMER),
+                            title=ft.Text("Timer"), on_click=open_timer
+                        ),
+
+                    ],
+                    spacing=0,
+                ),
+                padding=ft.padding.symmetric(vertical=0),
+            )
+        )
+    )
+
 
 
 
