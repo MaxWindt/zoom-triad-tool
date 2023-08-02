@@ -1,138 +1,159 @@
-import flet as ft
-import yaml
-import main
-import webbrowser
-import timer
+import time
+import PySimpleGUI as sg
+import pyautogui
+import pygame
+import pywinauto
+import pyperclip
 
-def safe_gui_settings(e):
-    old_settings = get_settings()
-    old_settings["group_size"] = int(dd_group_size.value)
-    with open('settings.txt', 'w') as f:
-        yaml.dump(old_settings, f, sort_keys=False, default_flow_style=False)
+def send_keys_fast(value):
+    prev_value = pyperclip.paste()
+    pyperclip.copy(value)
+    pywinauto.keyboard.send_keys("^a^v")
+    pyperclip.copy(prev_value)
 
-def reset_settings_file(e):
-    settings = {# Version 0.1
-                    "group_size" : 3,
-                    "minimal_group" : 4,
-                    "placeholder_rooms" : 5,
-                    "activate_language1" : True,
-                    "activate_language2" : True,
-                    "add_universal_to_language1" : False,
-                    "add_universal_to_language2" : False,
-                    "tags_nt":["Triad", "TRIAD", "NT", "triad","tirad","^nt "],
-                    "tags_hosts":["Host", ".:.", "Team"],
-                    "tags_lang1":["DE", "De-","De ","^de ","^de/","D E "],
-                    "tags_lang2":["EN", "En-", "En ", "ES","SP"]}
-    with open('settings.txt', 'w') as f:
-        yaml.dump(settings, f, sort_keys=False, default_flow_style=False)
+def click_input_no_movement(element):
+    pos = pyautogui.position()
+    element.click_input()
+    pyautogui.moveTo(pos)
 
-def get_settings():
-    try:
-        with open('settings.txt') as f:
-            settings = yaml.safe_load(f)
-    except:
-        print("Error loading settings, loading defaults")
-    return settings
-
-dd_group_size = ft.Dropdown(border="UNDERLINE",width=50,
-            hint_text="Size",
-            on_change=safe_gui_settings,
-            value=3,
-            options=[
-                ft.dropdown.Option(2),
-                ft.dropdown.Option(3),
-                ft.dropdown.Option(6),
-            ],
-        )
-
-def gui(page: ft.Page):
-    page.title = "Triad Tool"
-    #page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.window_always_on_top = True
-    page.window_width = 300
-    page.window_height = 300
-    t = ft.Text()
-    page.snack_bar = ft.SnackBar(
-        content=t,
-        action="OK",
-        )
-    def open_settings(e):
-        webbrowser.open("settings.txt")
-    def open_timer(e):
-        timer.main()
-    def button_clicked(e):
-        b.disabled = True
-        t.value = "working... do not interrupt!"
-        b.update()
-        try:
-            # ... YOUR CODE HERE ... #
-            main.main(get_settings())
-            t.value = "Done"
-        except Exception as e:
-            # ... PRINT THE ERROR MESSAGE ... #
-            t.value = e
-            page.snack_bar.open = True
-            page.update()
-        b.disabled = False
-        b.update()
-        t.update()
-    b = ft.FloatingActionButton(
-        icon=ft.icons.PLAY_ARROW, on_click=button_clicked
-    )
-    page.floating_action_button = b
-    txt_number = ft.TextField(value="0", text_align="center", width=50)
+def send_to_breakouts(text):
     
-    page.add(ft.Card(
-            content=ft.Container(
-
-                content=ft.Column(
-                    [
-
-                        ft.ListTile(
-			
-                            
-                            leading=ft.Icon(ft.icons.GROUP),
-                            title=ft.Text("Group Size"),
-                            trailing=dd_group_size,
-                        ),
-                        ft.ListTile(
-                            leading=ft.Icon(ft.icons.SETTINGS),
-                            title=ft.Text("Advanced Settings"),
-                            on_click=open_settings
-                        ),
-
-                    ],
-                    spacing=0,
-                ),
-                padding=ft.padding.symmetric(vertical=0),
-            )
-        )
-    )
-
-    
-    page.add(ft.Card(
-            content=ft.Container(
-
-                content=ft.Column(
-                    [
-
-                        ft.ListTile(
-			
-                            
-                            leading=ft.Icon(ft.icons.AV_TIMER),
-                            title=ft.Text("Timer"), on_click=open_timer
-                        ),
-
-                    ],
-                    spacing=0,
-                ),
-                padding=ft.padding.symmetric(vertical=0),
-            )
-        )
-    )
+    #initialize the breakout window
+    app = pywinauto.Application(backend="uia").connect(
+        title_re="Breakout Sessions - Im Gange.*")
 
 
+    app_wrapper = app.window(
+            title_re="Breakout Sessions - Im Gange.*").wrapper_object()
 
+    app_buttons = app_wrapper.descendants(control_type="Button")
+    sending_text_btn = app_buttons[-2]
+    sending_text_btn.click() 
 
-ft.app(target=gui)
+    app_menu = app_wrapper.descendants(control_type="MenuItem")
+    send_text_menu  = app_menu[0]
+    send_voice_menu = app_menu[1]
+        
+    click_input_no_movement(send_text_menu)
+    send_keys_fast(text)
+    pywinauto.keyboard.send_keys("{ENTER}")
+
+def make_a_sound():
+    pygame.init()
+    pygame.mixer.init()
+    sound = pygame.mixer.Sound("zimbeln.mp3")
+    sound.set_volume(0.5)   # Now plays at 50% of full volume.
+    sound.play()  
+
+def main():
+    # create the PySimpleGUI window
+    layout = [
+        [sg.Text("Number of persons:"), sg.InputText(key="-ROUNDS-", default_text="3", size=(5,1))],
+            [sg.Text("CheckIn duration (min)"), sg.InputText(key="-CHECKIN-", default_text="2", size=(5,1))],
+        [sg.Text("Time per person (min):"), sg.InputText(key="-DURATION-", default_text="1", size=(5,1))],
+        [sg.Checkbox("Use Total Time", key="-USE_TOTAL-", default=False)],
+        [sg.Text("Total (minutes):"), sg.InputText(key="-TOTALDURATION-", default_text="5", size=(5,1))],
+        [sg.Checkbox("Send Text Prompt To Breakouts", key="-SEND_TO_BREAKOUTS-", default=True)],
+        [sg.Button("Start Timer"), sg.Button("Stop Timer", disabled=True)],
+        [sg.Text("Time remaining: ", key="-TEXTOUT-"),sg.Text("00:00", key="-OUTPUT-", font=("Helvetica", 30))]
+    ]
+    window = sg.Window("Timer GUI", layout)
+
+    # initialize the timer variables
+    total_time = 0
+    end_time = 0
+    timer_running = False  
+
+    while True:
+        event, values = window.read()
+        
+        if event == sg.WIN_CLOSED:
+            break
+        
+        # calculate the total duration based on the user input
+        if values["-USE_TOTAL-"]:
+            rounds = int(values["-ROUNDS-"])
+            total_time = int(values["-TOTALDURATION-"])
+            checkin = int(values["-CHECKIN-"])
+            checkout = 2
+            round_duration = (total_time - checkin - checkout)// rounds
+            window["-DURATION-"].update(round_duration)
+        else:
+            checkin = int(values["-CHECKIN-"])
+            checkout = 2
+            rounds = int(values["-ROUNDS-"])
+            round_duration = int(values["-DURATION-"])
+            total_time = (rounds * round_duration + checkin + checkout) * 60
+            window["-TOTALDURATION-"].update(str(total_time // 60))
+        
+        if event == "Start Timer":
+            i =0
+            # set the durations for the rounds and total time
+            total_time = 0
+            while i <= (rounds):
+                if i == 0:
+                    duration = int(values["-CHECKIN-"])
+                    window["-TEXTOUT-"].update(f"Check in")
+                elif i == 1:
+                    duration = round_duration
+                    window["-TEXTOUT-"].update(f"{i}. person")
+                else:
+                    duration = round_duration
+                    window["-TEXTOUT-"].update(f"{i}. person")
+                    make_a_sound()
+                    if values["-SEND_TO_BREAKOUTS-"]:
+                        send_to_breakouts(str(i)+"st person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
+                i += 1
+
+                
+                # countdown loop
+                end_time = time.time() + duration * 60
+                timer_running = True
+                window["Start Timer"].update(disabled=True)
+                window["Stop Timer"].update(disabled=False)
+                while timer_running and time.time() < end_time:
+                
+                    remaining_time = end_time - time.time()
+                    mins = int(remaining_time // 60)
+                    secs = int(remaining_time % 60)
+                    window["-OUTPUT-"].update(f"{mins:02d}:{secs:02d}")
+                    event, values = window.read(timeout=100)  # check for "Stop Timer" button press
+                    if event == "Stop Timer":
+                        i = rounds +1
+                        timer_running = False
+                        total_time = 0
+                        window["-OUTPUT-"].update("00:00")
+                        window["Start Timer"].update(disabled=False)
+                        window["Stop Timer"].update(disabled=True)
+                        window["-TEXTOUT-"].update(f"Stopped")
+                        break
+                else:
+                    window["-TEXTOUT-"].update(f"All rounds finished, Fadeout")
+                    window["-OUTPUT-"].update("00:00")
+            
+            
+            
+            if timer_running:  # timer completed all rounds
+                make_a_sound()
+                time.sleep(4)
+                make_a_sound()
+                time.sleep(4)
+                make_a_sound()
+                if values["-SEND_TO_BREAKOUTS-"]:
+                    send_to_breakouts("Fadeout ∞ Ausklingen")
+                window["Start Timer"].update(disabled=False)
+                window["Stop Timer"].update(disabled=True)
+                total_time = 0
+
+            
+        elif event == "Stop Timer":
+            timer_running = False
+            total_time = 0
+            window["-OUTPUT-"].update("00:00")
+            window["Start Timer"].update(disabled=False)
+            window["Stop Timer"].update(disabled=True)
+            
+    window.close()
+
+if __name__ == "__main__":
+    main()
