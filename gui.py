@@ -17,26 +17,28 @@ def click_input_no_movement(element):
     pyautogui.moveTo(pos)
 
 def send_to_breakouts(text):
-    
-    #initialize the breakout window
-    app = pywinauto.Application(backend="uia").connect(
-        title_re="Breakout Sessions - Im Gange.*")
+    try:
+        #initialize the breakout window
+        app = pywinauto.Application(backend="uia").connect(
+            title_re="Breakout Sessions - Im Gange.*")
 
 
-    app_wrapper = app.window(
-            title_re="Breakout Sessions - Im Gange.*").wrapper_object()
+        app_wrapper = app.window(
+                title_re="Breakout Sessions - Im Gange.*").wrapper_object()
 
-    app_buttons = app_wrapper.descendants(control_type="Button")
-    sending_text_btn = app_buttons[-2]
-    sending_text_btn.click() 
+        app_buttons = app_wrapper.descendants(control_type="Button")
+        sending_text_btn = app_buttons[-2]
+        sending_text_btn.click() 
 
-    app_menu = app_wrapper.descendants(control_type="MenuItem")
-    send_text_menu  = app_menu[0]
-    send_voice_menu = app_menu[1]
-        
-    click_input_no_movement(send_text_menu)
-    send_keys_fast(text)
-    pywinauto.keyboard.send_keys("{ENTER}")
+        app_menu = app_wrapper.descendants(control_type="MenuItem")
+        send_text_menu  = app_menu[0]
+        send_voice_menu = app_menu[1]
+            
+        click_input_no_movement(send_text_menu)
+        send_keys_fast(text)
+        pywinauto.keyboard.send_keys("{ENTER}")
+    except:
+        print("Text was not sent")
 
 def make_a_sound():
     pygame.init()
@@ -134,13 +136,13 @@ def main():
             
             
             if timer_running:  # timer completed all rounds
-                make_a_sound()
-                time.sleep(4)
-                make_a_sound()
-                time.sleep(4)
-                make_a_sound()
                 if values["-SEND_TO_BREAKOUTS-"]:
                     send_to_breakouts("Fadeout ∞ Ausklingen")
+                make_a_sound()
+                time.sleep(4)
+                make_a_sound()
+                time.sleep(4)
+                make_a_sound()
                 window["Start Timer"].update(disabled=False)
                 window["Stop Timer"].update(disabled=True)
                 total_time = 0
