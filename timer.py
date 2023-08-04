@@ -104,7 +104,7 @@ def main():
                     window["-TEXTOUT-"].update(f"{i}. person")
                     make_a_sound()
                     if values["-SEND_TO_BREAKOUTS-"]:
-                        send_to_breakouts(str(i)+"st person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
+                        send_to_breakouts(str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
                 i += 1
 
                 
