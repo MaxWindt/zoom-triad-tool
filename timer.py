@@ -59,7 +59,7 @@ def main():
         [sg.Button("Start Timer"), sg.Button("Stop Timer", disabled=True)],
         [sg.Text("Time remaining: ", key="-TEXTOUT-"),sg.Text("00:00", key="-OUTPUT-", font=("Helvetica", 30))]
     ]
-    window = sg.Window("Timer GUI", layout)
+    window = sg.Window("Timer GUI", layout,keep_on_top=True)
 
     # initialize the timer variables
     total_time = 0
@@ -90,6 +90,7 @@ def main():
         
         if event == "Start Timer":
             i =0
+            sg.popup("Audio Freigabe in Zoom einschalten und Breakout Fenster offen lassen :)",title="Nicht vergessen",any_key_closes=True,auto_close=True,auto_close_duration=3,keep_on_top=True)
             # set the durations for the rounds and total time
             total_time = 0
             while i <= (rounds):
@@ -99,6 +100,8 @@ def main():
                 elif i == 1:
                     duration = round_duration
                     window["-TEXTOUT-"].update(f"{i}. person")
+                    if values["-SEND_TO_BREAKOUTS-"]:
+                        send_to_breakouts(str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
                 else:
                     duration = round_duration
                     window["-TEXTOUT-"].update(f"{i}. person")
