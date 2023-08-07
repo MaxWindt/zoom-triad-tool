@@ -10,7 +10,7 @@ def safe_gui_settings(e):
     with open('settings.txt', 'w') as f:
         yaml.dump(old_settings, f, sort_keys=False, default_flow_style=False)
 
-def reset_settings_file(e):
+def reset_settings_file():
     settings = {# Version 0.1
                     "group_size" : 3,
                     "minimal_group" : 4,
@@ -25,6 +25,7 @@ def reset_settings_file(e):
                     "tags_lang2":["EN", "En-", "En ", "ES","SP"]}
     with open('settings.txt', 'w') as f:
         yaml.dump(settings, f, sort_keys=False, default_flow_style=False)
+    return settings
 
 def get_settings():
     try:
@@ -32,6 +33,7 @@ def get_settings():
             settings = yaml.safe_load(f)
     except:
         print("Error loading settings, loading defaults")
+        settings = reset_settings_file()
     return settings
 
 dd_group_size = ft.Dropdown(border="UNDERLINE",width=50,
@@ -61,7 +63,7 @@ def gui(page: ft.Page):
         webbrowser.open("settings.txt")
     def open_timer(e):
         timer.main()
-    def button_clicked(e):
+    def play_button_clicked(e):
         b.disabled = True
         t.value = "working... do not interrupt!"
         b.update()
@@ -78,7 +80,7 @@ def gui(page: ft.Page):
         b.update()
         t.update()
     b = ft.FloatingActionButton(
-        icon=ft.icons.PLAY_ARROW, on_click=button_clicked
+        icon=ft.icons.PLAY_ARROW, on_click=play_button_clicked
     )
     page.floating_action_button = b
     txt_number = ft.TextField(value="0", text_align="center", width=50)
