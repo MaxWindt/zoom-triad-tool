@@ -1,6 +1,6 @@
 import flet as ft
 import yaml
-import main
+import clean_groups
 import webbrowser
 import timer
 
@@ -69,7 +69,7 @@ def gui(page: ft.Page):
         b.update()
         try:
             # ... YOUR CODE HERE ... #
-            main.main(get_settings())
+            clean_groups.main(get_settings())
             t.value = "Done"
         except Exception as e:
             # ... PRINT THE ERROR MESSAGE ... #
