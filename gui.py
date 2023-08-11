@@ -6,12 +6,15 @@ import webbrowser
 import timer
 import timer
 
+rounds_text = ft.TextField(width=50, text_align=ft.TextAlign.CENTER,value=3)
 
 def safe_gui_settings(e):
     old_settings = get_settings()
     old_settings["group_size"] = int(dd_group_size.value)
     with open('settings.txt', 'w') as f:
         yaml.dump(old_settings, f, sort_keys=False, default_flow_style=False)
+    rounds_text.value = dd_group_size.value
+    rounds_text.update()
 
 def reset_settings_file():
     settings = {  # Version 1.0
@@ -57,11 +60,9 @@ dd_group_size = ft.Dropdown(border="UNDERLINE", width=50,
 
 def gui(page: ft.Page):
     page.title = "Triad Tool"
-    # page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.window_always_on_top = True
     page.window_width = 300
-    page.window_height = 350
     t = ft.Text()
     tabs = ft.Tab()
     page.snack_bar = ft.SnackBar(
@@ -120,21 +121,20 @@ def gui(page: ft.Page):
                         leading=ft.Icon(
                             ft.icons.GROUP),
                         title=ft.Text("Rounds"),
-                        trailing=ft.TextField(
-                            width=50, text_align=ft.TextAlign.CENTER),
+                        trailing=rounds_text,
                     ),
                     ft.ListTile(
                         leading=ft.Icon(
                             ft.icons.TIMELAPSE),
                         title=ft.Text("Time per Round (min)"),
                         trailing=ft.TextField(
-                            width=50, text_align=ft.TextAlign.CENTER),
+                            width=50, text_align=ft.TextAlign.CENTER, value=5),
                     ),
                     ft.ListTile(
-                        title=ft.Checkbox(label="Send Text To Breakouts")
+                        title=ft.Checkbox(label="Send Text To Breakouts",value=True)
                     ),
                     ft.ListTile(
-                        title=ft.Checkbox(label="Ring Bell Every Round")
+                        title=ft.Checkbox(label="Ring Bell Every Round",value=True)
                     ),
 
                 ]
