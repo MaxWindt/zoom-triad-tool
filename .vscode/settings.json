@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "c:/Users/Max/Documents/code/zoom-triad-tool/."
+    ],
+    "python.terminal.activateEnvironment": false
+}
