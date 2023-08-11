@@ -1,7 +1,8 @@
 import flet as ft
 import yaml
-import main
+import clean_groups
 import webbrowser
+import timer
 
 
 def safe_gui_settings(e):
@@ -10,8 +11,7 @@ def safe_gui_settings(e):
     with open('settings.txt', 'w') as f:
         yaml.dump(old_settings, f, sort_keys=False, default_flow_style=False)
 
-
-def reset_settings_file(e):
+def reset_settings_file():
     settings = {  # Version 1.0
         "group_size": 3,
         "minimal_group": 4,
@@ -26,6 +26,8 @@ def reset_settings_file(e):
         "tags_lang2": ["EN", "En-", "En ", "ES", "SP"]}
     with open('settings.txt', 'w') as f:
         yaml.dump(settings, f, sort_keys=False, default_flow_style=False)
+    return settings
+
 
 
 def get_settings():
@@ -34,6 +36,7 @@ def get_settings():
             settings = yaml.safe_load(f)
     except:
         print("Error loading settings, loading defaults")
+        settings = reset_settings_file()
     return settings
 
 
@@ -78,13 +81,13 @@ def gui(page: ft.Page):
             page.update()
             b.update()
 
-    def button_clicked(e):
+    def play_button_clicked(e):
         b.disabled = True
         t.value = "working... do not interrupt!"
         b.update()
         try:
             # ... YOUR CODE HERE ... #
-            main.main(get_settings())
+            clean_groups.main(get_settings())
             t.value = "Done"
         except Exception as e:
             # ... PRINT THE ERROR MESSAGE ... #
@@ -95,7 +98,7 @@ def gui(page: ft.Page):
         b.update()
         t.update()
     b = ft.FloatingActionButton(
-        icon=ft.icons.PLAY_ARROW, on_click=button_clicked
+        icon=ft.icons.PLAY_ARROW, on_click=play_button_clicked
     )
     pb = ft.ProgressBar(width=400, value=0.5)
     timer = ft.Column(
