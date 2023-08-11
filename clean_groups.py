@@ -5,7 +5,7 @@ import pywinauto
 import time
 import numpy as np
 import yaml
-from new_groups import create_groups, assign_participants,room_buttons_only, create_new_groups
+from create_new_groups import create_groups, assign_participants,room_buttons_only, create_new_groups
 # get the start time
 st = time.time()
 
