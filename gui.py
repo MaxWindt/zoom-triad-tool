@@ -1,7 +1,9 @@
 import flet as ft
 import yaml
 import clean_groups
+import clean_groups
 import webbrowser
+import timer
 import timer
 
 
@@ -36,6 +38,7 @@ def get_settings():
             settings = yaml.safe_load(f)
     except:
         print("Error loading settings, loading defaults")
+        settings = reset_settings_file()
         settings = reset_settings_file()
     return settings
 
@@ -87,6 +90,7 @@ def gui(page: ft.Page):
         b.update()
         try:
             # ... YOUR CODE HERE ... #
+            clean_groups.main(get_settings())
             clean_groups.main(get_settings())
             t.value = "Done"
         except Exception as e:
