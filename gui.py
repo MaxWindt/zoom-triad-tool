@@ -150,7 +150,13 @@ def gui(page: ft.Page):
 
     def start_timer(e):
         total_time = update_total_time(e)
+        global timer_event
         timer_event = ""
+
+        timer_running = True
+        b_start_timer.disabled = True
+        b_stop_timer.disabled = False
+        page.update()
         i=0
         global t_info
         print(t_info.value)
@@ -164,53 +170,66 @@ def gui(page: ft.Page):
                     t_info.value = f"{i}. Person"
                     if c_send_to_breakouts.value:
                         util.send_to_breakouts(str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
+                elif i == t_rounds.value:
+                    duration = int(t_round.value)
+                    t_info.value = "Fadeout"
+                    if c_send_to_breakouts.value:
+                        util.send_to_breakouts("Fadeout ∞ Ausklingen")
+                    if c_ring_bell.value:
+                        util.make_a_sound()
+                        time.sleep(4)
+                        util.make_a_sound()
+                        time.sleep(4)
+                        util.make_a_sound()
                 else:
                     duration = int(t_round.value)
                     t_info.value = f"{i}. Person"
-                    util.make_a_sound()
+                    if c_ring_bell.value:
+                        util.make_a_sound()
                     if c_send_to_breakouts.value:
                         util.send_to_breakouts(str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
                 page.update(t_info)
                 i += 1
-
+                end_time = time.time() + duration * 60
                 
                 # countdown loop
-                end_time = time.time() + duration * 60
-                timer_running = True
-                b_start_timer.disabled = True
-                b_stop_timer.disabled = False
+
 
                 while timer_running and time.time() < end_time:
                     remaining_time = end_time - time.time()
                     remaining_total_time = total_end_time - time.time()
                     total_mins = int(remaining_total_time // 60)
+                    progress = 1-remaining_total_time/total_time
                     mins = int(remaining_time // 60)
                     secs = int(remaining_time % 60)
                     t_currenttime.value = f"{mins:02d}:{secs:02d}"
                     l_total_time.value = f"{total_mins:02d}:{secs:02d}"
-                    page.update(t_currenttime)
-                    page.update(l_total_time)
+                    pb.value = progress
                     page.update()
                     time.sleep(1)
-                    if timer_event == "Stop Timer":# check for "Stop Timer" button press
+                    # Check for "Stop Timer" button press
+                    if timer_event == "Stop Timer":
                         i = t_rounds.value + 1
                         timer_running = False
                         total_time = 0
-                        t_currenttime.value="00:00"
+                        t_currenttime.value = "00:00"
                         b_start_timer.disabled = False
                         b_stop_timer.disabled = True
-                        t_info.value = f"Stopped"
+                        t_info.value = "Stopped"
                         break
 
                 else:
-                    t_info.value = f"Fadeout"
+                    t_info.value = f"Finished"
                     t_currenttime.value="00:00"
+                    b_start_timer.disabled = False
+                    b_stop_timer.disabled = True
 
         page.update()
     
     def stop_timer(e):
         global timer_event 
         timer_event = "Stop Timer"
+        timer_running = False
     
     b_start_timer =ft.IconButton(icon=ft.icons.PLAY_ARROW_ROUNDED,on_click=start_timer)
     b_stop_timer = ft.IconButton(icon=ft.icons.STOP,on_click=stop_timer)
