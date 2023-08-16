@@ -8,6 +8,8 @@ import timer_old
 import util
 import timer
 
+development_mode = False
+
 t_rounds = ft.TextField(value=3,width=50, text_align=ft.TextAlign.CENTER)
 t_checkin = ft.TextField(value=2,width=80, label="CheckIn",
                          label_style=ft.TextStyle(size=15), suffix_text="min")
@@ -161,7 +163,7 @@ def gui(page: ft.Page):
         global t_info
         print(t_info.value)
         total_end_time = time.time() + total_time
-        while i <= (t_rounds.value):
+        while i <= (t_rounds.value + 1):
                 if i == 0:
                     duration = int(t_checkin.value)
                     t_info.value = "Check in"
@@ -170,9 +172,10 @@ def gui(page: ft.Page):
                     t_info.value = f"{i}. Person"
                     if c_send_to_breakouts.value:
                         util.send_to_breakouts(str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
-                elif i == t_rounds.value:
-                    duration = int(t_round.value)
+                elif i == t_rounds.value + 1:
+                    duration = int(t_fadeout.value)
                     t_info.value = "Fadeout"
+                    page.update(t_info)
                     if c_send_to_breakouts.value:
                         util.send_to_breakouts("Fadeout ∞ Ausklingen")
                     if c_ring_bell.value:
@@ -191,7 +194,7 @@ def gui(page: ft.Page):
                 page.update(t_info)
                 i += 1
                 end_time = time.time() + duration * 60
-                
+                if development_mode: end_time = time.time() + 5
                 # countdown loop
 
 
@@ -310,7 +313,7 @@ def gui(page: ft.Page):
             ),
             ft.Tab(
                 icon=ft.icons.INFO,
-                content=ft.Text("Triad Tool v1.0"),
+                content=ft.Text("Triad Tool v1.0 Dark Mode Switch"),
             ),
         ],
         width=400, height=500
