@@ -6,7 +6,6 @@ import clean_groups
 import webbrowser
 import timer_old
 import util
-import timer
 
 development_mode = False
 
