@@ -10,29 +10,27 @@ import timer
 
 development_mode = False
 
-t_rounds = ft.TextField(value=3,width=50, text_align=ft.TextAlign.CENTER)
-t_checkin = ft.TextField(value=2,width=80, label="CheckIn",
+t_rounds = ft.TextField(value=3, width=50, text_align=ft.TextAlign.CENTER)
+t_checkin = ft.TextField(value=2, width=80, label="CheckIn",
                          label_style=ft.TextStyle(size=15), suffix_text="min")
-t_round = ft.TextField(value=3,width=80, label="Round",
+t_round = ft.TextField(value=3, width=80, label="Round",
                        label_style=ft.TextStyle(size=15), suffix_text="min")
-t_fadeout = ft.TextField(value=2,width=80, label="Fadeout",
+t_fadeout = ft.TextField(value=2, width=80, label="Fadeout",
                          label_style=ft.TextStyle(size=14), suffix_text="min")
-l_total_time = ft.Text(value="50:00", size=15)
-pb = ft.ProgressBar(width=215, value=0.9)
-global t_info 
-t_info = ft.Text("1.", size=20)
-t_currenttime = ft.Text("7:09", size=50)
+l_total_time = ft.Text(value="--:--", size=15)
+pb = ft.ProgressBar(width=215, value=1)
+global t_info
+t_info = ft.Text("", size=20)
+t_currenttime = ft.Text("00:00", size=50)
 
 
-
-c_ring_bell = ft.Checkbox(
-                    label="Ring Bell Every Round", value=True) 
-c_send_to_breakouts = ft.Checkbox(
-                    label="Send Text To Breakouts", value=True)
-
+c_ring_bell = ft.Switch(
+    label="Ring Bell Every Round", value=True)
+c_send_to_breakouts = ft.Switch(
+    label="Send Text To Breakouts", value=True)
 
 
-def safe_gui_settings(e):
+def safe_settings(e):
     old_settings = get_settings()
     old_settings["group_size"] = int(dd_group_size.value)
     with open('settings.txt', 'w') as f:
@@ -72,7 +70,7 @@ def get_settings():
 
 dd_group_size = ft.Dropdown(border="UNDERLINE", width=50,
                             hint_text="Size",
-                            on_change=safe_gui_settings,
+                            on_change=safe_settings,
                             value=3,
                             options=[
                                 ft.dropdown.Option(2),
@@ -87,12 +85,43 @@ def gui(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.window_always_on_top = True
     page.window_width = 300
+    page.window_height = 300
     t = ft.Text()
     tabs = ft.Tab()
     page.snack_bar = ft.SnackBar(
         content=t,
         action="OK",
     )
+
+    def save_user_inputs():
+        user_inputs = {
+            "t_checkin": t_checkin.value,
+            "t_round": t_round.value,
+            "t_fadeout": t_fadeout.value,
+            "t_rounds": t_rounds.value,
+            "c_send_to_breakouts": c_send_to_breakouts.value,
+            "c_ring_bell": c_ring_bell.value,
+            "dd_group_size": dd_group_size.value,
+            # Add more inputs here...
+        }
+
+        page.client_storage.set("user_inputs", user_inputs)
+        
+    def restore_user_inputs():
+        user_inputs = page.client_storage.get("user_inputs")
+
+        t_checkin.value = user_inputs.get("t_checkin", t_checkin.value)
+        t_round.value = user_inputs.get("t_round", t_round.value)
+        t_fadeout.value = user_inputs.get("t_fadeout", t_fadeout.value)
+        t_rounds.value = user_inputs.get("t_rounds", t_rounds.value)
+        c_send_to_breakouts.value = user_inputs.get(
+            "c_send_to_breakouts", c_send_to_breakouts.value)
+        c_ring_bell.value = user_inputs.get("c_ring_bell", c_ring_bell.value)
+        dd_group_size.value = user_inputs.get("dd_group_size", dd_group_size.value)
+        # Restore more inputs here...
+
+        # Update the GUI controls with restored values
+        page.update()
 
     def open_settings(e):
         webbrowser.open("settings.txt")
@@ -103,7 +132,7 @@ def gui(page: ft.Page):
     def on_tab_change(e):
         if tabs.selected_index != 0:
             page.floating_action_button.visible = False
-            page.window_height = 520
+            page.window_height = 540
             page.update()
             b.update()
         else:
@@ -113,6 +142,7 @@ def gui(page: ft.Page):
             b.update()
 
     def play_button_clicked(e):
+        save_user_inputs()
         b.disabled = True
         t.value = "working... do not interrupt!"
         b.update()
@@ -125,11 +155,9 @@ def gui(page: ft.Page):
             # ... PRINT THE ERROR MESSAGE ... #
             t.value = e
             page.snack_bar.open = True
-            page.update()
         b.disabled = False
-        b.update()
-        t.update()
-    
+        page.update()
+
     b = ft.FloatingActionButton(
         icon=ft.icons.PLAY_ARROW, on_click=play_button_clicked
     )
@@ -146,11 +174,11 @@ def gui(page: ft.Page):
 
         total_time = (rounds * round_duration + checkin + checkout) * 60
         l_total_time.value = str(total_time // 60) + ":00"
-        print(t_info.value)
         page.update()
         return total_time
 
     def start_timer(e):
+        save_user_inputs()
         total_time = update_total_time(e)
         global timer_event
         timer_event = ""
@@ -159,93 +187,95 @@ def gui(page: ft.Page):
         b_start_timer.disabled = True
         b_stop_timer.disabled = False
         page.update()
-        i=0
+        i = 0
         global t_info
-        print(t_info.value)
         total_end_time = time.time() + total_time
         while i <= (t_rounds.value + 1):
-                if i == 0:
-                    duration = int(t_checkin.value)
-                    t_info.value = "Check in"
-                elif i == 1:
-                    duration = int(t_round.value)
-                    t_info.value = f"{i}. Person"
-                    if c_send_to_breakouts.value:
-                        util.send_to_breakouts(str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
-                elif i == t_rounds.value + 1:
-                    duration = int(t_fadeout.value)
-                    t_info.value = "Fadeout"
-                    page.update(t_info)
-                    if c_send_to_breakouts.value:
-                        util.send_to_breakouts("Fadeout ∞ Ausklingen")
-                    if c_ring_bell.value:
-                        util.make_a_sound()
-                        time.sleep(4)
-                        util.make_a_sound()
-                        time.sleep(4)
-                        util.make_a_sound()
-                else:
-                    duration = int(t_round.value)
-                    t_info.value = f"{i}. Person"
-                    if c_ring_bell.value:
-                        util.make_a_sound()
-                    if c_send_to_breakouts.value:
-                        util.send_to_breakouts(str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
+            if i == 0:
+                duration = int(t_checkin.value)
+                t_info.value = "Check in"
+            elif i == 1:
+                duration = int(t_round.value)
+                t_info.value = f"{i}. Person"
+                if c_send_to_breakouts.value:
+                    util.send_to_breakouts(
+                        str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
+            elif i == t_rounds.value + 1:
+                duration = int(t_fadeout.value)
+                t_info.value = "Fadeout"
                 page.update(t_info)
-                i += 1
-                end_time = time.time() + duration * 60
-                if development_mode: end_time = time.time() + 5
-                # countdown loop
+                if c_send_to_breakouts.value:
+                    util.send_to_breakouts("Fadeout ∞ Ausklingen")
+                if c_ring_bell.value:
+                    util.make_a_sound()
+                    time.sleep(4)
+                    util.make_a_sound()
+                    time.sleep(4)
+                    util.make_a_sound()
+            else:
+                duration = int(t_round.value)
+                t_info.value = f"{i}. Person"
+                if c_ring_bell.value:
+                    util.make_a_sound()
+                if c_send_to_breakouts.value:
+                    util.send_to_breakouts(
+                        str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
+            page.update(t_info)
+            i += 1
+            end_time = time.time() + duration * 60
+            if development_mode:
+                end_time = time.time() + 5
+            # countdown loop
 
-
-                while timer_running and time.time() < end_time:
-                    remaining_time = end_time - time.time()
-                    remaining_total_time = total_end_time - time.time()
-                    total_mins = int(remaining_total_time // 60)
-                    progress = 1-remaining_total_time/total_time
-                    mins = int(remaining_time // 60)
-                    secs = int(remaining_time % 60)
-                    t_currenttime.value = f"{mins:02d}:{secs:02d}"
-                    l_total_time.value = f"{total_mins:02d}:{secs:02d}"
-                    pb.value = progress
-                    page.update()
-                    time.sleep(1)
-                    # Check for "Stop Timer" button press
-                    if timer_event == "Stop Timer":
-                        i = t_rounds.value + 1
-                        timer_running = False
-                        total_time = 0
-                        t_currenttime.value = "00:00"
-                        b_start_timer.disabled = False
-                        b_stop_timer.disabled = True
-                        t_info.value = "Stopped"
-                        break
-
-                else:
-                    t_info.value = f"Finished" #TODO fadeout not working 
-                    t_currenttime.value="00:00"
+            while timer_running and time.time() < end_time:
+                remaining_time = end_time - time.time()
+                remaining_total_time = total_end_time - time.time()
+                total_mins = int(remaining_total_time // 60)
+                progress = 1-remaining_total_time/total_time
+                mins = int(remaining_time // 60)
+                secs = int(remaining_time % 60)
+                t_currenttime.value = f"{mins:02d}:{secs:02d}"
+                l_total_time.value = f"{total_mins:02d}:{secs:02d}"
+                pb.value = progress
+                page.update()
+                time.sleep(1)
+                # Check for "Stop Timer" button press
+                if timer_event == "Stop Timer":
+                    i = t_rounds.value + 1
+                    timer_running = False
+                    total_time = 0
+                    t_currenttime.value = "00:00"
                     b_start_timer.disabled = False
                     b_stop_timer.disabled = True
+                    t_info.value = "Stopped"
+                    break
+
+            else:
+                t_info.value = f"Finished"  # TODO fadeout not working
+                t_currenttime.value = "00:00"
+                b_start_timer.disabled = False
+                b_stop_timer.disabled = True
 
         page.update()
-    
+
     def stop_timer(e):
-        global timer_event 
+        global timer_event
         timer_event = "Stop Timer"
         timer_running = False
-    
-    b_start_timer =ft.IconButton(icon=ft.icons.PLAY_ARROW_ROUNDED,on_click=start_timer)
-    b_stop_timer = ft.IconButton(icon=ft.icons.STOP,on_click=stop_timer)
+
+    b_start_timer = ft.IconButton(
+        icon=ft.icons.PLAY_ARROW_ROUNDED, on_click=start_timer)
+    b_stop_timer = ft.IconButton(icon=ft.icons.STOP, on_click=stop_timer)
     timer = ft.Column(
         scroll=ft.ScrollMode.ALWAYS,
         height=page.height,
         controls=[
-            ft.Row([t_info, t_currenttime ],
+            ft.Row([t_info, t_currenttime],
                    alignment=ft.MainAxisAlignment.CENTER),
 
-            ft.Row([pb,l_total_time]),
+            ft.Row([pb, l_total_time]),
             ft.Row(
-                        [b_start_timer, b_stop_timer],
+                [b_start_timer, b_stop_timer],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
             ft.Row([t_checkin, t_round, t_fadeout],
@@ -257,19 +287,32 @@ def gui(page: ft.Page):
                 trailing=t_rounds,
             ),
             ft.ListTile(
-                title= c_send_to_breakouts 
+                title=c_send_to_breakouts
             ),
             ft.ListTile(
-                title= c_ring_bell
+                title=c_ring_bell
             ),
 
         ]
     )
 
+
+    dark_theme_switch = ft.Switch()
+
+    def switch_theme(e): 
+        if dark_theme_switch.value:
+            page.theme_mode = "light"
+        else:
+            page.theme = ft.ThemeMode.DARK
+
+    dark_theme_switch.on_change = switch_theme
+
     tabs = ft.Tabs(
-        selected_index=1,
+        selected_index=0,
         animation_duration=300,
         on_change=on_tab_change,
+        
+
         tabs=[
             ft.Tab(
                 tab_content=ft.Icon(ft.icons.GROUPS),
@@ -313,18 +356,21 @@ def gui(page: ft.Page):
             ),
             ft.Tab(
                 icon=ft.icons.INFO,
-                content=ft.Text("Triad Tool v1.0 Dark Mode Switch"),
+                content=ft.Column([ft.Text("Triad Tool v1.0 Dark Mode Switch"), dark_theme_switch]),
             ),
         ],
         width=400, height=500
 
     )
-
+    
     page.floating_action_button = b
-    txt_number = ft.TextField(value="0", text_align="center", width=50)
+
+    try:
+        restore_user_inputs()
+    except:
+        print("no user input saved yet")
+
     page.add(tabs)
-
-
 
 
 ft.app(target=gui)
