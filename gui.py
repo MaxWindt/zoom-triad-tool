@@ -387,7 +387,7 @@ def gui(page: ft.Page):
                         ),
 
                         ft.ListTile(
-                            title=ft.TextButton(icon=ft.icons.FAVORITE, style=ft.ButtonStyle(bgcolor=ft.colors.GREY_200),
+                            title=ft.OutlinedButton(icon=ft.icons.FAVORITE, 
                                                 text="Donate", url="https://www.paypal.com/paypalme/maxschwindt", tooltip="paypal.me/maxschwindt",)
                         ),
                         ft.Row([ft.Text("© 2022-" + str(time.gmtime(time.time()).tm_year) + " Max Schwindt"), ft.IconButton(icon=ft.icons.CODE, url="https://github.com/MaxWindt/zoom-triad-tool")]),
