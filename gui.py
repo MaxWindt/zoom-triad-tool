@@ -7,6 +7,8 @@ import webbrowser
 import timer_old
 import util
 
+
+__version__ = 'beta 1.1.0'
 development_mode = False
 
 t_rounds = ft.TextField(value=3, width=50, text_align=ft.TextAlign.CENTER)
@@ -28,6 +30,8 @@ c_ring_bell = ft.Switch(
 c_send_to_breakouts = ft.Switch(
     label="Send Text To Breakouts", value=True)
 
+email = "max@thesharing.space"
+
 
 def safe_settings(e):
     old_settings = get_settings()
@@ -39,18 +43,19 @@ def safe_settings(e):
 
 
 def reset_settings_file():
-    settings = {  # Version 1.0
+    settings = {
         "group_size": 3,
-        "minimal_group": 4,
+        "minimal_group": 2,
         "placeholder_rooms": 5,
         "activate_language1": True,
         "activate_language2": True,
-        "add_universal_to_language1": False,
-        "add_universal_to_language2": False,
+        "add_universal_to_language1": True,
+        "add_universal_to_language2": True,
         "tags_nt": ["Triad", "TRIAD", "NT", "triad", "tirad", "^nt "],
         "tags_hosts": ["Host", ".:.", "Team"],
         "tags_lang1": ["DE", "De-", "De ", "^de ", "^de/", "D E "],
-        "tags_lang2": ["EN", "En-", "En ", "ES", "SP"]}
+        "tags_lang2": ["EN", "En-", "En ", "ES", "SP"],
+        "version":__version__}
     with open('settings.txt', 'w') as f:
         yaml.dump(settings, f, sort_keys=False, default_flow_style=False)
     return settings
@@ -105,7 +110,7 @@ def gui(page: ft.Page):
         }
 
         page.client_storage.set("user_inputs", user_inputs)
-        
+
     def restore_user_inputs():
         user_inputs = page.client_storage.get("user_inputs")
 
@@ -116,7 +121,8 @@ def gui(page: ft.Page):
         c_send_to_breakouts.value = user_inputs.get(
             "c_send_to_breakouts", c_send_to_breakouts.value)
         c_ring_bell.value = user_inputs.get("c_ring_bell", c_ring_bell.value)
-        dd_group_size.value = user_inputs.get("dd_group_size", dd_group_size.value)
+        dd_group_size.value = user_inputs.get(
+            "dd_group_size", dd_group_size.value)
         # Restore more inputs here...
 
         # Update the GUI controls with restored values
@@ -295,23 +301,31 @@ def gui(page: ft.Page):
         ]
     )
 
+    def theme_changed(e):
+        page.theme_mode = (
+            ft.ThemeMode.DARK
+            if page.theme_mode == ft.ThemeMode.LIGHT
+            else ft.ThemeMode.LIGHT
+        )
+        theme_switch.label = (
+            "Enable Night Theme" if page.theme_mode == ft.ThemeMode.LIGHT else "Return To Day Theme"
+        )
+        page.update()
 
-    dark_theme_switch = ft.Switch()
+    page.theme_mode = ft.ThemeMode.LIGHT
+    theme_switch = ft.Switch(
+        label="Enable Night Theme", on_change=theme_changed)
 
-    def switch_theme(e): 
-        if dark_theme_switch.value:
-            page.theme_mode = "light"
-        else:
-            page.theme = ft.ThemeMode.DARK
-
-    dark_theme_switch.on_change = switch_theme
+    def email2clipboard(e):
+        page.set_clipboard(email)
+        t.value = "Address Copied!"
+        page.snack_bar.open = True
+        page.update()
 
     tabs = ft.Tabs(
         selected_index=0,
         animation_duration=300,
         on_change=on_tab_change,
-        
-
         tabs=[
             ft.Tab(
                 tab_content=ft.Icon(ft.icons.GROUPS),
@@ -355,13 +369,38 @@ def gui(page: ft.Page):
             ),
             ft.Tab(
                 icon=ft.icons.INFO,
-                content=ft.Column([ft.Text("Triad Tool v1.0 Dark Mode Switch"), dark_theme_switch]),
+                content=ft.Column(
+                    controls=[
+                        ft.ListTile(
+                            title=theme_switch
+                        ),
+                        ft.Text("Contact", size=18),
+                        ft.Text(
+                            "If you have any questions or suggestions, please contact me at:",
+                        ),
+                        ft.ListTile(url="mailto:max@thesharing.space",
+                                    title=ft.Text("max@thesharing.space"), on_click=email2clipboard
+                                    ),
+                        ft.Text("Support this project", size=18),
+                        ft.Text(
+                            "This project took many hours of work. Your support is highly appriciated <3",
+                        ),
+
+                        ft.ListTile(
+                            title=ft.TextButton(icon=ft.icons, style=ft.ButtonStyle(bgcolor=ft.colors.GREY_200),
+                                                text="⭐️ donate ⭐️", url="https://www.paypal.com/paypalme/maxschwindt", tooltip="paypal.me/maxschwindt",)
+                        ),
+                        ft.Row([ft.Text("© 2022-" + str(time.gmtime(time.time()).tm_year) + " Max Schwindt"), ft.IconButton(icon=ft.icons.CODE, url="https://github.com/MaxWindt/zoom-triad-tool")]),
+                        ft.Text("Version: " + __version__)],
+                    alignment=ft.CrossAxisAlignment.CENTER,
+
+                ),
             ),
         ],
         width=400, height=500
 
     )
-    
+
     page.floating_action_button = b
 
     try:
