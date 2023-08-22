@@ -74,7 +74,7 @@ def main(settings):
         # add single-participant-rooms to no_triad_rooms
         if name_list[x][1] < settings["group_size"]:  # mark room to be cleaned if room < then group_size
             rooms_to_be_cleaned.extend([[name_list[x][0], name_list[x][1]]])
-    #  TODO: check for added names from changes in active breakout.py since new_groups.py
+    #  TODO: check for added new names
     if name_list_only != []:
         NT_ids = np.flatnonzero(np.chararray.find(name_list_only, "triad") != -1)
         NT_ids = np.append(NT_ids,np.flatnonzero(np.chararray.find(name_list_only, "NT")!= -1))

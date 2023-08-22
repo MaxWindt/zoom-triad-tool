@@ -256,7 +256,7 @@ def gui(page: ft.Page):
                     break
 
             else:
-                t_info.value = f"Finished"  # TODO fadeout not working
+                t_info.value = f"Finished"
                 t_currenttime.value = "00:00"
                 b_start_timer.disabled = False
                 b_stop_timer.disabled = True

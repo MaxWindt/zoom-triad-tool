@@ -193,11 +193,6 @@ def update_list_positions(id_array, removed_ids):
 
 
 def breakout_assignment(hosts, notriad, participants_in_rooms, placeholder_rooms, breakout_window):
-    # starting_position(breakout_window)
-
-    # TODO navigate through click on zuordnen and move down if it is not found
-    # breakout_buttons = breakout_window.descendants(control_type="Button") # [1] = room 1
-    # breakout_buttons[1].click()
     breakout_buttons = room_buttons_only(breakout_window)  # [1] = room 1
 
     # main loop
