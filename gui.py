@@ -253,7 +253,8 @@ def gui(page: ft.Page):
                     b_start_timer.disabled = False
                     b_stop_timer.disabled = True
                     t_info.value = "Stopped"
-                    break
+                    page.update()
+                    return
 
         t_info.value = f"Finished"
         t_currenttime.value = "00:00"
