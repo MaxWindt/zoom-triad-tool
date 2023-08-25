@@ -9,7 +9,7 @@ import util
 
 
 __version__ = 'beta 1.1.0'
-development_mode = False
+development_mode = True
 
 t_rounds = ft.TextField(value=3, width=50, text_align=ft.TextAlign.CENTER)
 t_checkin = ft.TextField(value=2, width=80, label="CheckIn",
@@ -255,11 +255,10 @@ def gui(page: ft.Page):
                     t_info.value = "Stopped"
                     break
 
-            else:
-                t_info.value = f"Finished"
-                t_currenttime.value = "00:00"
-                b_start_timer.disabled = False
-                b_stop_timer.disabled = True
+        t_info.value = f"Finished"
+        t_currenttime.value = "00:00"
+        b_start_timer.disabled = False
+        b_stop_timer.disabled = True        
 
         page.update()
 
