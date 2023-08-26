@@ -154,7 +154,6 @@ def gui(page: ft.Page):
         try:
             # ... YOUR CODE HERE ... #
             clean_groups.main(get_settings())
-            clean_groups.main(get_settings())
             t.value = "Done"
         except Exception as e:
             # ... PRINT THE ERROR MESSAGE ... #
