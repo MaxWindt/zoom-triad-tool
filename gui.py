@@ -14,7 +14,7 @@ development_mode = False
 t_rounds = ft.TextField(value=3, width=50, text_align=ft.TextAlign.CENTER)
 t_checkin = ft.TextField(value=2, width=80, label="CheckIn",
                          label_style=ft.TextStyle(size=15), suffix_text="min")
-t_round = ft.TextField(value=3, width=80, label="Round",
+t_round_duration = ft.TextField(value=3, width=80, label="Round",
                        label_style=ft.TextStyle(size=15), suffix_text="min")
 t_fadeout = ft.TextField(value=2, width=80, label="Fadeout",
                          label_style=ft.TextStyle(size=14), suffix_text="min")
@@ -100,7 +100,7 @@ def gui(page: ft.Page):
     def save_user_inputs():
         user_inputs = {
             "t_checkin": t_checkin.value,
-            "t_round": t_round.value,
+            "t_round": t_round_duration.value,
             "t_fadeout": t_fadeout.value,
             "t_rounds": t_rounds.value,
             "c_send_to_breakouts": c_send_to_breakouts.value,
@@ -115,7 +115,7 @@ def gui(page: ft.Page):
         user_inputs = page.client_storage.get("user_inputs")
 
         t_checkin.value = user_inputs.get("t_checkin", t_checkin.value)
-        t_round.value = user_inputs.get("t_round", t_round.value)
+        t_round_duration.value = user_inputs.get("t_round", t_round_duration.value)
         t_fadeout.value = user_inputs.get("t_fadeout", t_fadeout.value)
         t_rounds.value = user_inputs.get("t_rounds", t_rounds.value)
         c_send_to_breakouts.value = user_inputs.get(
@@ -167,21 +167,46 @@ def gui(page: ft.Page):
     )
 
     def update_total_time(e):
-        checkin = int(t_checkin.value)
-        t_checkin.value = checkin
-        checkout = int(t_fadeout.value)
-        t_fadeout.value = checkout
-        rounds = int(t_rounds.value)
-        t_rounds.value = rounds
-        round_duration = int(t_round.value)
-        t_round.value = round_duration
+        try: 
+            checkin = int(t_checkin.value)
+            t_checkin.border_color = None
+            t_checkin.value = checkin
+        except: t_checkin.border_color = "red"       
 
-        total_time = (rounds * round_duration + checkin + checkout) * 60
-        l_total_time.value = str(total_time // 60) + ":00"
+        try: 
+            fadeout = int(t_fadeout.value)
+            t_fadeout.border_color = None
+            t_fadeout.value = fadeout
+        except: t_fadeout.border_color = "red"  
+
+        try: 
+            rounds = int(t_rounds.value)
+            t_rounds.border_color = None
+            t_rounds.value = rounds
+        except: t_rounds.border_color = "red" 
+        
+        try: 
+            round_duration = int(t_round_duration.value)
+            t_round_duration.border_color = None
+            t_round_duration.value = round_duration
+        except: t_round_duration.border_color = "red" 
+        
+        
+        try:
+            total_time = (rounds * round_duration + checkin + fadeout) * 60
+            l_total_time.value = str(total_time // 60) + ":00"
+        except:
+            total_time = 0
+            l_total_time.value = "??:??"
         page.update()
         return total_time
 
     def start_timer(e):
+        if l_total_time.value == '??:??':
+            t.value = "Please check your inputs!"
+            page.snack_bar.open = True
+            page.update()
+            return
         save_user_inputs()
         total_time = update_total_time(e)
         global timer_event
@@ -199,7 +224,7 @@ def gui(page: ft.Page):
                 duration = int(t_checkin.value)
                 t_info.value = "Check in"
             elif i == 1:
-                duration = int(t_round.value)
+                duration = int(t_round_duration.value)
                 t_info.value = f"{i}. Person"
                 if c_send_to_breakouts.value:
                     util.send_to_breakouts(
@@ -217,7 +242,7 @@ def gui(page: ft.Page):
                     time.sleep(4)
                     util.make_a_sound()
             else:
-                duration = int(t_round.value)
+                duration = int(t_round_duration.value)
                 t_info.value = f"{i}. Person"
                 if c_ring_bell.value:
                     util.make_a_sound()
@@ -262,10 +287,18 @@ def gui(page: ft.Page):
 
         page.update()
 
+
+
     def stop_timer(e):
         global timer_event
         timer_event = "Stop Timer"
         timer_running = False
+
+    t_rounds.on_change = update_total_time
+    t_checkin.on_change = update_total_time
+    t_round_duration.on_change = update_total_time
+    t_fadeout.on_change = update_total_time
+
 
     b_start_timer = ft.IconButton(
         icon=ft.icons.PLAY_ARROW_ROUNDED, on_click=start_timer)
@@ -282,7 +315,7 @@ def gui(page: ft.Page):
                 [b_start_timer, b_stop_timer],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
-            ft.Row([t_checkin, t_round, t_fadeout],
+            ft.Row([t_checkin, t_round_duration, t_fadeout],
                    ),
             ft.ListTile(
                 leading=ft.Icon(
