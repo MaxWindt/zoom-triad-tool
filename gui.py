@@ -8,7 +8,7 @@ import timer_old
 import util
 
 
-__version__ = 'beta 1.1.0'
+__version__ = 'beta 0.2.0'
 development_mode = False
 
 t_rounds = ft.TextField(value=3, width=50, text_align=ft.TextAlign.CENTER)
@@ -26,9 +26,9 @@ t_currenttime = ft.Text("00:00", size=50)
 
 
 c_ring_bell = ft.Switch(
-    label="Ring Bell Every Round", value=True)
+    label="Ring bell in main room", value=True)
 c_send_to_breakouts = ft.Switch(
-    label="Send Text To Breakouts", value=True)
+    label="Send text to sessions", value=True)
 
 email = "max@thesharing.space"
 
@@ -140,6 +140,7 @@ def gui(page: ft.Page):
             page.window_height = 540
             page.update()
             b.update()
+            update_total_time(e)
         else:
             page.floating_action_button.visible = True
             page.window_height = 300
@@ -219,7 +220,7 @@ def gui(page: ft.Page):
         i = 0
         global t_info
         total_end_time = time.time() + total_time
-        while i <= (t_rounds.value + 1):
+        while i <= (t_rounds.value + 2):
             if i == 0:
                 duration = int(t_checkin.value)
                 t_info.value = "Check in"
@@ -229,12 +230,22 @@ def gui(page: ft.Page):
                 if c_send_to_breakouts.value:
                     util.send_to_breakouts(
                         str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
+                if c_ring_bell.value:
+                    util.make_a_sound()
             elif i == t_rounds.value + 1:
                 duration = int(t_fadeout.value)
                 t_info.value = "Fadeout"
                 page.update(t_info)
                 if c_send_to_breakouts.value:
                     util.send_to_breakouts("Fadeout ∞ Ausklingen")
+                if c_ring_bell.value:
+                    util.make_a_sound()
+                    time.sleep(4)
+                    util.make_a_sound()
+            elif i == t_rounds.value + 2:
+                duration = int(t_fadeout.value)
+                t_info.value = "THE END"
+                page.update(t_info)
                 if c_ring_bell.value:
                     util.make_a_sound()
                     time.sleep(4)
@@ -441,6 +452,7 @@ def gui(page: ft.Page):
         print("no user input saved yet")
 
     page.add(tabs)
+    
 
 
 ft.app(target=gui)
