@@ -19,7 +19,7 @@ t_round_duration = ft.TextField(value=3, width=80, label="Round",
 t_fadeout = ft.TextField(value=2, width=80, label="Fadeout",
                          label_style=ft.TextStyle(size=14), suffix_text="min")
 l_total_time = ft.Text(value="--:--", size=15)
-pb = ft.ProgressBar(width=215, value=1)
+pb = ft.ProgressBar(width=210, value=1)
 global t_info
 t_info = ft.Text("", size=20)
 t_currenttime = ft.Text("00:00", size=50)
@@ -216,6 +216,8 @@ def gui(page: ft.Page):
         timer_running = True
         b_start_timer.disabled = True
         b_stop_timer.disabled = False
+        t.value = "External audio shared?\nBreakout sessions window opened?"
+        page.snack_bar.open = True
         page.update()
         i = 0
         global t_info
@@ -243,8 +245,7 @@ def gui(page: ft.Page):
                     time.sleep(4)
                     util.make_a_sound()
             elif i == t_rounds.value + 2:
-                duration = int(t_fadeout.value)
-                t_info.value = "THE END"
+                duration = 0
                 page.update(t_info)
                 if c_ring_bell.value:
                     util.make_a_sound()
