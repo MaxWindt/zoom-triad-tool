@@ -8,7 +8,7 @@ import timer_old
 import util
 
 
-__version__ = 'beta 0.2.0'
+__version__ = 'beta 0.2.2'
 development_mode = False
 
 t_rounds = ft.TextField(value=3, width=50, text_align=ft.TextAlign.CENTER)
