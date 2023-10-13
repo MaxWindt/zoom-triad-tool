@@ -14,10 +14,11 @@ dependencies:
   - PyYAML==6.0
   - pysimplegui==4.60.4 
   - pygame==2.5.0
-  - pip
+  - flet==0.9.0
+  #- pip
 
-  - pip:
+  #- pip:
 
     # Define pip packages here. 
     # https://pypi.org/
-    - flet==0.9.0
+    
