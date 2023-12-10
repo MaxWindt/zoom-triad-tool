@@ -422,8 +422,8 @@ def gui(page: ft.Page):
                         ft.Text(
                             "If you have any questions or suggestions, please contact me at:",
                         ),
-                        ft.ListTile(url="mailto:max@thesharing.space",
-                                    title=ft.Text("max@thesharing.space"), on_click=email2clipboard
+                        ft.ListTile(url="mailto:max@thesharingspace.de",
+                                    title=ft.Text("max@thesharingspace.de"), on_click=email2clipboard
                                     ),
                         ft.Text("Support this project", size=18),
                         ft.Text(
