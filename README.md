@@ -1,4 +1,4 @@
-# Triad Tool for Zoom
+# Triad Tool
 
 <p align="center">
          <img height="500" src="https://github.com/MaxWindt/zoom-triad-tool/assets/86522026/e45c9504-d6c8-42c9-a368-a488d49aeca4" /> 
