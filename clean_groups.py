@@ -68,11 +68,16 @@ def main(settings):
     name_list_only = []  # = [[NAME],...]
     rooms_to_be_cleaned = []  # = [[ROOM, PARTICIPANTS_SUM],...]
     empty_rooms = []
+    # use minimal group size when smaller than group size for deciding whether to clean a room  or not
+    if settings["minimal_group"] < settings["group_size"]:
+        min_group_size = settings["minimal_group"]
+    else: min_group_size = settings["group_size"]
+
     for x in range(len(name_list)):
         # create a name-only list
         name_list_only.extend([name_list[x][2]])
-        # add single-participant-rooms to no_triad_rooms
-        if name_list[x][1] < settings["group_size"]:  # mark room to be cleaned if room < then group_size
+        # add small-rooms to rooms_to_be_cleaned
+        if name_list[x][1] < min_group_size:  # mark room to be cleaned if room < then group_size
             rooms_to_be_cleaned.extend([[name_list[x][0], name_list[x][1]]])
     #  TODO: check for added new names
     if name_list_only != []:
