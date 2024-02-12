@@ -8,7 +8,7 @@ import timer_old
 import util
 
 
-__version__ = 'beta 0.2.2'
+__version__ = 'beta 0.3.1'
 development_mode = False
 
 t_rounds = ft.TextField(value=3, width=50, text_align=ft.TextAlign.CENTER)
@@ -32,6 +32,7 @@ c_send_to_breakouts = ft.Switch(
 t_send_to_breakouts = ft.TextField(
     value="{i}. person can start now ∞ {i}. Person kann jetzt beginnen")
 t_send_to_breakouts_fadeout = ft.TextField(value="Fadeout ∞ Ausklingen")
+c_sync_time_with_zoom = ft.Checkbox(label="Sync Time with Zoom", value=True)
 
 email = "max@thesharing.space"
 
@@ -179,27 +180,31 @@ def gui(page: ft.Page):
 
     def update_total_time(e):
         try:
-            checkin = int(t_checkin.value)
+            global checkin_duration
+            checkin_duration = int(t_checkin.value)
             t_checkin.border_color = None
-            t_checkin.value = checkin
+            t_checkin.value = checkin_duration
         except:
             t_checkin.border_color = "red"
 
         try:
-            fadeout = int(t_fadeout.value)
+            global fadeout_duration
+            fadeout_duration = int(t_fadeout.value)
             t_fadeout.border_color = None
-            t_fadeout.value = fadeout
+            t_fadeout.value = fadeout_duration
         except:
             t_fadeout.border_color = "red"
 
         try:
-            rounds = int(t_rounds.value)
+            global nr_of_rounds
+            nr_of_rounds = int(t_rounds.value)
             t_rounds.border_color = None
-            t_rounds.value = rounds
+            t_rounds.value = nr_of_rounds
         except:
             t_rounds.border_color = "red"
 
         try:
+            global round_duration
             round_duration = int(t_round_duration.value)
             t_round_duration.border_color = None
             t_round_duration.value = round_duration
@@ -207,7 +212,7 @@ def gui(page: ft.Page):
             t_round_duration.border_color = "red"
 
         try:
-            total_time = (rounds * round_duration + checkin + fadeout) * 60
+            total_time = (nr_of_rounds * round_duration + checkin_duration + fadeout_duration) * 60
             l_total_time.value = str(total_time // 60) + ":00"
         except:
             total_time = 0
@@ -216,17 +221,55 @@ def gui(page: ft.Page):
         return total_time
 
     def send_to_breakouts(text):
-        for _ in range(3):
-            if util.send_text_to_zoom(text):
-                t.value = "Text was send "+ text
-                page.snack_bar.open = True
-                page.update()
-                return True
-            else:
-                t.value = "Text was not send!. Retrying..."
-                page.snack_bar.open = True
-                page.update()
-                time.sleep(1)  # Wait for a second before retrying
+        # open alert dialog before sending message
+        def close_dlg(e):
+            dlg_modal.open = False
+            page.update()
+            c_send_to_breakouts.value = False
+
+        dlg_modal = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Sending Text to Breakouts..."),
+            content=ft.Text("Sending Text: \n"+text),
+            actions=[
+                ft.TextButton("STOP", on_click=close_dlg),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END
+        )
+        page.dialog = dlg_modal
+        dlg_modal.open = True
+        page.update()
+        time.sleep(3)
+        dlg_modal.open = False
+        page.update()
+        if c_send_to_breakouts.value:
+            for _ in range(3):
+                if util.send_text_to_zoom(text):
+                    t.value = "Text was send "+ text
+                    page.snack_bar.open = True
+                    page.update()
+                    return True
+                else:
+                    def close_banner(e):
+                        page.banner.open = False
+                        page.update()
+                    
+                    page.banner = ft.Banner(
+                    bgcolor=ft.colors.AMBER_100,
+                    leading=ft.Icon(ft.icons.WARNING_AMBER_ROUNDED, color=ft.colors.RED, size=40),
+                    content=ft.Text(
+                        "Text was not send!. Retrying... \n" + text
+                    ),
+                    actions=[
+
+                        ft.TextButton("close", on_click=close_banner),
+                    ],
+                )
+                    t.value = "Text was not send!. Retrying..."
+                    # page.snack_bar.open = True
+                    page.banner.open = True
+                    page.update()
+                    time.sleep(3)  # Wait for a second before retrying
 
     def start_timer(e):
         if l_total_time.value == '??:??':
@@ -242,68 +285,122 @@ def gui(page: ft.Page):
         timer_running = True
         b_start_timer.disabled = True
         b_stop_timer.disabled = False
+        t_checkin.disabled = True
+        t_fadeout.disabled = True
+        t_round_duration.disabled = True
+        t_rounds.disabled = True
+
         t.value = "External audio shared?\nBreakout sessions window opened?"
         page.snack_bar.open = True
         page.update()
         i = 0
         global t_info
         start_time = time.time()
-        
+
+        sync_time_with_zoom = c_sync_time_with_zoom.value
+        try:
+            if sync_time_with_zoom:
+                # Define remaining total time
+                remaining_total_time = util.get_time_left_in_breakouts()  # (hours, minutes, seconds)
+                # Convert remaining total time to seconds
+                remaining_total_seconds = int(remaining_total_time[0]) * 3600 + int(remaining_total_time[1]) * 60 + int(remaining_total_time[2])
+                # calculate starting time
+                start_time = time.time() - (total_time - remaining_total_seconds)
+
+                # Calculate elapsed time since the start
+                elapsed_time = time.time() - start_time
+
+                # Determine in which phase you are
+                if elapsed_time <= checkin_duration*60:
+                    phase = "Check-in"
+                    phase_duration = checkin_duration*60
+                    round_number = 0  # No round during check-in
+                else:
+                    # Calculate elapsed time excluding check-in phase
+                    elapsed_time -= checkin_duration*60
+                    
+                    # Determine the number of complete rounds and remaining time
+                    complete_rounds = elapsed_time // (round_duration*60)
+                    remaining_time = elapsed_time % (round_duration*60)
+
+                    if complete_rounds < nr_of_rounds:
+                        phase = "{i}. Person"
+                        phase_duration = round_duration*60
+                        round_number = complete_rounds + 1
+                    else:
+                        phase = "Fadeout"
+                        phase_duration = fadeout_duration*60
+                        round_number = t_rounds.value
+                
+                i = int(round_number)
+
+                # Calculate time left in the current phase
+                time_left_in_phase = phase_duration - (elapsed_time % phase_duration)
+        except: 
+            sync_time_with_zoom = False
+            print("connection to zoom breakout window failed")
+
         while i <= (t_rounds.value + 2):
             start_time_current_round = time.time()
+            if not sync_time_with_zoom:
+                if i == 0:
+                    duration = int(t_checkin.value)
+                    t_info.value = "Check in"
+                elif i == 1:
+                    duration = int(t_round_duration.value)
+                    t_info.value = f"{i}. Person"
+                    if c_send_to_breakouts.value:
+                        send_to_breakouts(t_send_to_breakouts.value.format(i=i))
+                    if c_ring_bell.value:
+                        util.make_a_sound()
+                elif i == t_rounds.value + 1:
+                    duration = int(t_fadeout.value)
+                    t_info.value = "Fadeout"
+                    page.update(t_info)
+                    if c_send_to_breakouts.value:
+                        send_to_breakouts(t_send_to_breakouts_fadeout.value)
+                    if c_ring_bell.value:
+                        util.make_a_sound()
+                        time.sleep(4)
+                        util.make_a_sound()
+                elif i == t_rounds.value + 2:
+                    duration = 0
+                    page.update(t_info)
+                    if c_ring_bell.value:
+                        util.make_a_sound()
+                        time.sleep(4)
+                        util.make_a_sound()
+                        time.sleep(4)
+                        util.make_a_sound()
+                else:
+                    duration = int(t_round_duration.value)
+                    t_info.value = f"{i}. Person"
+                    if c_ring_bell.value:
+                        util.make_a_sound()
+                    if c_send_to_breakouts.value:
+                        send_to_breakouts(t_send_to_breakouts.value.format(i=i))
 
-            if i == 0:
-                duration = int(t_checkin.value)
-                t_info.value = "Check in"
-            elif i == 1:
-                duration = int(t_round_duration.value)
-                t_info.value = f"{i}. Person"
-                if c_send_to_breakouts.value:
-                    send_to_breakouts(t_send_to_breakouts.value.format(i=i))
-                if c_ring_bell.value:
-                    util.make_a_sound()
-            elif i == t_rounds.value + 1:
-                duration = int(t_fadeout.value)
-                t_info.value = "Fadeout"
-                page.update(t_info)
-                if c_send_to_breakouts.value:
-                    send_to_breakouts(t_send_to_breakouts_fadeout.value)
-                if c_ring_bell.value:
-                    util.make_a_sound()
-                    time.sleep(4)
-                    util.make_a_sound()
-            elif i == t_rounds.value + 2:
-                duration = 0
-                page.update(t_info)
-                if c_ring_bell.value:
-                    util.make_a_sound()
-                    time.sleep(4)
-                    util.make_a_sound()
-                    time.sleep(4)
-                    util.make_a_sound()
-            else:
-                duration = int(t_round_duration.value)
-                t_info.value = f"{i}. Person"
-                if c_ring_bell.value:
-                    util.make_a_sound()
-                if c_send_to_breakouts.value:
-                    send_to_breakouts(t_send_to_breakouts.value.format(i=i))
-                    
+
+
+            if sync_time_with_zoom: 
+                end_time = start_time_current_round + time_left_in_phase
+                try: t_info.value = phase.format(i=i)
+                except: t_info.value = phase
+
+                sync_time_with_zoom = False
+            else: end_time = start_time_current_round + duration * 60
+
+            if development_mode: end_time = start_time_current_round + 5
+
             page.update(t_info)
             i += 1
-            
-
-            end_time = start_time_current_round + duration * 60
-            if development_mode:
-                end_time = start_time_current_round + 5
-            # countdown loop            
+            # Countdown loop
             while timer_running and time.time() < end_time:
-
                 total_end_time = start_time + total_time
                 remaining_time = end_time - time.time()
                 remaining_total_time = total_end_time - time.time()
                 total_mins = int(remaining_total_time // 60)
-                progress = 1-remaining_total_time/total_time
+                progress = 1 - remaining_total_time / total_time
                 mins = int(remaining_time // 60)
                 secs = int(remaining_time % 60)
                 t_currenttime.value = f"{mins:02d}:{secs:02d}"
@@ -319,6 +416,10 @@ def gui(page: ft.Page):
                     t_currenttime.value = "00:00"
                     b_start_timer.disabled = False
                     b_stop_timer.disabled = True
+                    t_checkin.disabled = False
+                    t_fadeout.disabled = False
+                    t_round_duration.disabled = False
+                    t_rounds.disabled = False
                     t_info.value = "Stopped"
                     page.update()
                     return
@@ -327,8 +428,12 @@ def gui(page: ft.Page):
         t_currenttime.value = "00:00"
         b_start_timer.disabled = False
         b_stop_timer.disabled = True
-
+        t_checkin.disabled = False
+        t_fadeout.disabled = False
+        t_round_duration.disabled = False
+        t_rounds.disabled = False
         page.update()
+
 
     def stop_timer(e):
         global timer_event
@@ -382,6 +487,9 @@ def gui(page: ft.Page):
         ), ft.ListTile(
             title=ft.Text("Check out started"),
             subtitle=t_send_to_breakouts_fadeout
+        ),
+        ft.ListTile(
+            title=c_sync_time_with_zoom
         ),]
 
     )
