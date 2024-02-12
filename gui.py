@@ -15,7 +15,7 @@ t_rounds = ft.TextField(value=3, width=50, text_align=ft.TextAlign.CENTER)
 t_checkin = ft.TextField(value=2, width=80, label="CheckIn",
                          label_style=ft.TextStyle(size=15), suffix_text="min")
 t_round_duration = ft.TextField(value=3, width=80, label="Round",
-                       label_style=ft.TextStyle(size=15), suffix_text="min")
+                                label_style=ft.TextStyle(size=15), suffix_text="min")
 t_fadeout = ft.TextField(value=2, width=80, label="Fadeout",
                          label_style=ft.TextStyle(size=14), suffix_text="min")
 l_total_time = ft.Text(value="--:--", size=15)
@@ -29,6 +29,9 @@ c_ring_bell = ft.Switch(
     label="Ring bell in main room", value=True)
 c_send_to_breakouts = ft.Switch(
     label="Send text to sessions", value=True)
+t_send_to_breakouts = ft.TextField(
+    value="{i}. person can start now ∞ {i}. Person kann jetzt beginnen")
+t_send_to_breakouts_fadeout = ft.TextField(value="Fadeout ∞ Ausklingen")
 
 email = "max@thesharing.space"
 
@@ -53,9 +56,9 @@ def reset_settings_file():
         "add_universal_to_language2": True,
         "tags_nt": ["Triad", "TRIAD", "NT", "triad", "tirad", "^nt "],
         "tags_hosts": ["Host", "\.:\.", "Team"],
-        "tags_lang1": ["DE", "De-", "De ", "^de ","^de-", "^de/", "D E "],
+        "tags_lang1": ["DE", "De-", "De ", "^de ", "^de-", "^de/", "D E "],
         "tags_lang2": ["EN", "En-", "En ", "ES", "SP"],
-        "version":__version__}
+        "version": __version__}
     with open('settings.txt', 'w') as f:
         yaml.dump(settings, f, sort_keys=False, default_flow_style=False)
     return settings
@@ -106,6 +109,8 @@ def gui(page: ft.Page):
             "c_send_to_breakouts": c_send_to_breakouts.value,
             "c_ring_bell": c_ring_bell.value,
             "dd_group_size": dd_group_size.value,
+            "t_send_to_breakouts_fadeout": t_send_to_breakouts_fadeout.value,
+            "t_send_to_breakouts": t_send_to_breakouts.value
             # Add more inputs here...
         }
 
@@ -115,7 +120,8 @@ def gui(page: ft.Page):
         user_inputs = page.client_storage.get("user_inputs")
 
         t_checkin.value = user_inputs.get("t_checkin", t_checkin.value)
-        t_round_duration.value = user_inputs.get("t_round", t_round_duration.value)
+        t_round_duration.value = user_inputs.get(
+            "t_round", t_round_duration.value)
         t_fadeout.value = user_inputs.get("t_fadeout", t_fadeout.value)
         t_rounds.value = user_inputs.get("t_rounds", t_rounds.value)
         c_send_to_breakouts.value = user_inputs.get(
@@ -123,6 +129,10 @@ def gui(page: ft.Page):
         c_ring_bell.value = user_inputs.get("c_ring_bell", c_ring_bell.value)
         dd_group_size.value = user_inputs.get(
             "dd_group_size", dd_group_size.value)
+        t_send_to_breakouts_fadeout.value = user_inputs.get(
+            "t_send_to_breakouts_fadeout", t_send_to_breakouts_fadeout.value)
+        t_send_to_breakouts.value = user_inputs.get(
+            "t_send_to_breakouts", t_send_to_breakouts.value)
         # Restore more inputs here...
 
         # Update the GUI controls with restored values
@@ -168,31 +178,34 @@ def gui(page: ft.Page):
     )
 
     def update_total_time(e):
-        try: 
+        try:
             checkin = int(t_checkin.value)
             t_checkin.border_color = None
             t_checkin.value = checkin
-        except: t_checkin.border_color = "red"       
+        except:
+            t_checkin.border_color = "red"
 
-        try: 
+        try:
             fadeout = int(t_fadeout.value)
             t_fadeout.border_color = None
             t_fadeout.value = fadeout
-        except: t_fadeout.border_color = "red"  
+        except:
+            t_fadeout.border_color = "red"
 
-        try: 
+        try:
             rounds = int(t_rounds.value)
             t_rounds.border_color = None
             t_rounds.value = rounds
-        except: t_rounds.border_color = "red" 
-        
-        try: 
+        except:
+            t_rounds.border_color = "red"
+
+        try:
             round_duration = int(t_round_duration.value)
             t_round_duration.border_color = None
             t_round_duration.value = round_duration
-        except: t_round_duration.border_color = "red" 
-        
-        
+        except:
+            t_round_duration.border_color = "red"
+
         try:
             total_time = (rounds * round_duration + checkin + fadeout) * 60
             l_total_time.value = str(total_time // 60) + ":00"
@@ -201,6 +214,19 @@ def gui(page: ft.Page):
             l_total_time.value = "??:??"
         page.update()
         return total_time
+
+    def send_to_breakouts(text):
+        for _ in range(3):
+            if util.send_text_to_zoom(text):
+                t.value = "Text was send "+ text
+                page.snack_bar.open = True
+                page.update()
+                return True
+            else:
+                t.value = "Text was not send!. Retrying..."
+                page.snack_bar.open = True
+                page.update()
+                time.sleep(1)  # Wait for a second before retrying
 
     def start_timer(e):
         if l_total_time.value == '??:??':
@@ -221,8 +247,11 @@ def gui(page: ft.Page):
         page.update()
         i = 0
         global t_info
-        total_end_time = time.time() + total_time
+        start_time = time.time()
+        
         while i <= (t_rounds.value + 2):
+            start_time_current_round = time.time()
+
             if i == 0:
                 duration = int(t_checkin.value)
                 t_info.value = "Check in"
@@ -230,8 +259,7 @@ def gui(page: ft.Page):
                 duration = int(t_round_duration.value)
                 t_info.value = f"{i}. Person"
                 if c_send_to_breakouts.value:
-                    util.send_to_breakouts(
-                        str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
+                    send_to_breakouts(t_send_to_breakouts.value.format(i=i))
                 if c_ring_bell.value:
                     util.make_a_sound()
             elif i == t_rounds.value + 1:
@@ -239,7 +267,7 @@ def gui(page: ft.Page):
                 t_info.value = "Fadeout"
                 page.update(t_info)
                 if c_send_to_breakouts.value:
-                    util.send_to_breakouts("Fadeout ∞ Ausklingen")
+                    send_to_breakouts(t_send_to_breakouts_fadeout.value)
                 if c_ring_bell.value:
                     util.make_a_sound()
                     time.sleep(4)
@@ -259,16 +287,19 @@ def gui(page: ft.Page):
                 if c_ring_bell.value:
                     util.make_a_sound()
                 if c_send_to_breakouts.value:
-                    util.send_to_breakouts(
-                        str(i)+". person can start now ∞ "+str(i)+". Person kann jetzt beginnen")
+                    send_to_breakouts(t_send_to_breakouts.value.format(i=i))
+                    
             page.update(t_info)
             i += 1
-            end_time = time.time() + duration * 60
-            if development_mode:
-                end_time = time.time() + 5
-            # countdown loop
+            
 
+            end_time = start_time_current_round + duration * 60
+            if development_mode:
+                end_time = start_time_current_round + 5
+            # countdown loop            
             while timer_running and time.time() < end_time:
+
+                total_end_time = start_time + total_time
                 remaining_time = end_time - time.time()
                 remaining_total_time = total_end_time - time.time()
                 total_mins = int(remaining_total_time // 60)
@@ -295,11 +326,9 @@ def gui(page: ft.Page):
         t_info.value = f"Finished"
         t_currenttime.value = "00:00"
         b_start_timer.disabled = False
-        b_stop_timer.disabled = True        
+        b_stop_timer.disabled = True
 
         page.update()
-
-
 
     def stop_timer(e):
         global timer_event
@@ -310,7 +339,6 @@ def gui(page: ft.Page):
     t_checkin.on_change = update_total_time
     t_round_duration.on_change = update_total_time
     t_fadeout.on_change = update_total_time
-
 
     b_start_timer = ft.IconButton(
         icon=ft.icons.PLAY_ARROW_ROUNDED, on_click=start_timer)
@@ -343,6 +371,19 @@ def gui(page: ft.Page):
             ),
 
         ]
+    )
+
+    advanced_settings = ft.Column(controls=[
+        ft.ListTile(
+            title=ft.Text("Custom Text", theme_style=ft.TextThemeStyle.TITLE_LARGE)),
+        ft.ListTile(
+            title=ft.Text("Swithing to next person"),
+            subtitle=t_send_to_breakouts
+        ), ft.ListTile(
+            title=ft.Text("Check out started"),
+            subtitle=t_send_to_breakouts_fadeout
+        ),]
+
     )
 
     def theme_changed(e):
@@ -412,6 +453,10 @@ def gui(page: ft.Page):
                 content=timer,
             ),
             ft.Tab(
+                tab_content=ft.Icon(ft.icons.SETTINGS),
+                content=advanced_settings,
+            ),
+            ft.Tab(
                 icon=ft.icons.INFO,
                 content=ft.Column(
                     controls=[
@@ -431,10 +476,11 @@ def gui(page: ft.Page):
                         ),
 
                         ft.ListTile(
-                            title=ft.OutlinedButton(icon=ft.icons.FAVORITE, 
-                                                text="Donate", url="https://www.paypal.com/paypalme/maxschwindt", tooltip="paypal.me/maxschwindt",)
+                            title=ft.OutlinedButton(icon=ft.icons.FAVORITE,
+                                                    text="Donate", url="https://www.paypal.com/paypalme/maxschwindt", tooltip="paypal.me/maxschwindt",)
                         ),
-                        ft.Row([ft.Text("© 2022-" + str(time.gmtime(time.time()).tm_year) + " Max Schwindt"), ft.IconButton(icon=ft.icons.CODE, url="https://github.com/MaxWindt/zoom-triad-tool")]),
+                        ft.Row([ft.Text("© 2022-" + str(time.gmtime(time.time()).tm_year) + " Max Schwindt"),
+                               ft.IconButton(icon=ft.icons.CODE, url="https://github.com/MaxWindt/zoom-triad-tool")]),
                         ft.Text("Version: " + __version__)],
                     alignment=ft.CrossAxisAlignment.CENTER,
 
@@ -453,7 +499,6 @@ def gui(page: ft.Page):
         print("no user input saved yet")
 
     page.add(tabs)
-    
 
 
 ft.app(target=gui)
