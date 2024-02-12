@@ -52,8 +52,8 @@ def reset_settings_file():
         "add_universal_to_language1": True,
         "add_universal_to_language2": True,
         "tags_nt": ["Triad", "TRIAD", "NT", "triad", "tirad", "^nt "],
-        "tags_hosts": ["Host", ".:.", "Team"],
-        "tags_lang1": ["DE", "De-", "De ", "^de ", "^de/", "D E "],
+        "tags_hosts": ["Host", "\.:\.", "Team"],
+        "tags_lang1": ["DE", "De-", "De ", "^de ","^de-", "^de/", "D E "],
         "tags_lang2": ["EN", "En-", "En ", "ES", "SP"],
         "version":__version__}
     with open('settings.txt', 'w') as f:
