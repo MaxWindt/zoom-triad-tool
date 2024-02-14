@@ -4,7 +4,6 @@ import yaml
 import clean_groups
 import clean_groups
 import webbrowser
-import timer_old
 import util
 
 
@@ -142,9 +141,6 @@ def gui(page: ft.Page):
     def open_settings(e):
         webbrowser.open("settings.txt")
 
-    def open_timer(e):
-        timer_old.main()
-
     def on_tab_change(e):
         if tabs.selected_index != 0:
             page.floating_action_button.visible = False
@@ -212,7 +208,8 @@ def gui(page: ft.Page):
             t_round_duration.border_color = "red"
 
         try:
-            total_time = (nr_of_rounds * round_duration + checkin_duration + fadeout_duration) * 60
+            total_time = (nr_of_rounds * round_duration +
+                          checkin_duration + fadeout_duration) * 60
             l_total_time.value = str(total_time // 60) + ":00"
         except:
             total_time = 0
@@ -245,7 +242,7 @@ def gui(page: ft.Page):
         if c_send_to_breakouts.value:
             for _ in range(3):
                 if util.send_text_to_zoom(text):
-                    t.value = "Text was send "+ text
+                    t.value = "Text was send " + text
                     page.snack_bar.open = True
                     page.update()
                     return True
@@ -253,18 +250,19 @@ def gui(page: ft.Page):
                     def close_banner(e):
                         page.banner.open = False
                         page.update()
-                    
-                    page.banner = ft.Banner(
-                    bgcolor=ft.colors.AMBER_100,
-                    leading=ft.Icon(ft.icons.WARNING_AMBER_ROUNDED, color=ft.colors.RED, size=40),
-                    content=ft.Text(
-                        "Text was not send!. Retrying... \n" + text
-                    ),
-                    actions=[
 
-                        ft.TextButton("close", on_click=close_banner),
-                    ],
-                )
+                    page.banner = ft.Banner(
+                        bgcolor=ft.colors.AMBER_100,
+                        leading=ft.Icon(
+                            ft.icons.WARNING_AMBER_ROUNDED, color=ft.colors.RED, size=40),
+                        content=ft.Text(
+                            "Text was not send!. Retrying... \n" + text
+                        ),
+                        actions=[
+
+                            ft.TextButton("close", on_click=close_banner),
+                        ],
+                    )
                     t.value = "Text was not send!. Retrying..."
                     # page.snack_bar.open = True
                     page.banner.open = True
@@ -303,7 +301,8 @@ def gui(page: ft.Page):
                 # Define remaining total time
                 remaining_total_time = util.get_time_left_in_breakouts()  # (hours, minutes, seconds)
                 # Convert remaining total time to seconds
-                remaining_total_seconds = int(remaining_total_time[0]) * 3600 + int(remaining_total_time[1]) * 60 + int(remaining_total_time[2])
+                remaining_total_seconds = int(remaining_total_time[0]) * 3600 + int(
+                    remaining_total_time[1]) * 60 + int(remaining_total_time[2])
                 # calculate starting time
                 start_time = time.time() - (total_time - remaining_total_seconds)
 
@@ -318,7 +317,7 @@ def gui(page: ft.Page):
                 else:
                     # Calculate elapsed time excluding check-in phase
                     elapsed_time -= checkin_duration*60
-                    
+
                     # Determine the number of complete rounds and remaining time
                     complete_rounds = elapsed_time // (round_duration*60)
                     remaining_time = elapsed_time % (round_duration*60)
@@ -331,12 +330,13 @@ def gui(page: ft.Page):
                         phase = "Fadeout"
                         phase_duration = fadeout_duration*60
                         round_number = t_rounds.value
-                
+
                 i = int(round_number)
 
                 # Calculate time left in the current phase
-                time_left_in_phase = phase_duration - (elapsed_time % phase_duration)
-        except: 
+                time_left_in_phase = phase_duration - \
+                    (elapsed_time % phase_duration)
+        except:
             sync_time_with_zoom = False
             print("connection to zoom breakout window failed")
 
@@ -350,7 +350,8 @@ def gui(page: ft.Page):
                     duration = int(t_round_duration.value)
                     t_info.value = f"{i}. Person"
                     if c_send_to_breakouts.value:
-                        send_to_breakouts(t_send_to_breakouts.value.format(i=i))
+                        send_to_breakouts(
+                            t_send_to_breakouts.value.format(i=i))
                     if c_ring_bell.value:
                         util.make_a_sound()
                 elif i == t_rounds.value + 1:
@@ -378,19 +379,22 @@ def gui(page: ft.Page):
                     if c_ring_bell.value:
                         util.make_a_sound()
                     if c_send_to_breakouts.value:
-                        send_to_breakouts(t_send_to_breakouts.value.format(i=i))
+                        send_to_breakouts(
+                            t_send_to_breakouts.value.format(i=i))
 
-
-
-            if sync_time_with_zoom: 
+            if sync_time_with_zoom:
                 end_time = start_time_current_round + time_left_in_phase
-                try: t_info.value = phase.format(i=i)
-                except: t_info.value = phase
+                try:
+                    t_info.value = phase.format(i=i)
+                except:
+                    t_info.value = phase
 
                 sync_time_with_zoom = False
-            else: end_time = start_time_current_round + duration * 60
+            else:
+                end_time = start_time_current_round + duration * 60
 
-            if development_mode: end_time = start_time_current_round + 5
+            if development_mode:
+                end_time = start_time_current_round + 5
 
             page.update(t_info)
             i += 1
@@ -433,7 +437,6 @@ def gui(page: ft.Page):
         t_round_duration.disabled = False
         t_rounds.disabled = False
         page.update()
-
 
     def stop_timer(e):
         global timer_event
@@ -541,13 +544,7 @@ def gui(page: ft.Page):
                                 title=ft.Text(
                                     "Advanced Settings"),
                                 on_click=open_settings
-                            ),
-                            ft.ListTile(
-
-
-                                leading=ft.Icon(ft.icons.AV_TIMER),
-                                title=ft.Text("The Old Timer"), on_click=open_timer
-                            ),
+                            )
 
                         ],
                         spacing=0,
