@@ -7,16 +7,31 @@ import webbrowser
 import util
 
 
-__version__ = 'beta 0.3.1'
+__version__ = "beta 0.3.1"
 development_mode = False
 
 t_rounds = ft.TextField(value=3, width=50, text_align=ft.TextAlign.CENTER)
-t_checkin = ft.TextField(value=2, width=80, label="CheckIn",
-                         label_style=ft.TextStyle(size=15), suffix_text="min")
-t_round_duration = ft.TextField(value=3, width=80, label="Round",
-                                label_style=ft.TextStyle(size=15), suffix_text="min")
-t_fadeout = ft.TextField(value=2, width=80, label="Fadeout",
-                         label_style=ft.TextStyle(size=14), suffix_text="min")
+t_checkin = ft.TextField(
+    value=2,
+    width=80,
+    label="CheckIn",
+    label_style=ft.TextStyle(size=15),
+    suffix_text="min",
+)
+t_round_duration = ft.TextField(
+    value=3,
+    width=80,
+    label="Round",
+    label_style=ft.TextStyle(size=15),
+    suffix_text="min",
+)
+t_fadeout = ft.TextField(
+    value=2,
+    width=80,
+    label="Fadeout",
+    label_style=ft.TextStyle(size=14),
+    suffix_text="min",
+)
 l_total_time = ft.Text(value="--:--", size=15)
 pb = ft.ProgressBar(width=210, value=1)
 global t_info
@@ -24,12 +39,11 @@ t_info = ft.Text("", size=20)
 t_currenttime = ft.Text("00:00", size=50)
 
 
-c_ring_bell = ft.Switch(
-    label="Ring bell in main room", value=True)
-c_send_to_breakouts = ft.Switch(
-    label="Send text to sessions", value=True)
+c_ring_bell = ft.Switch(label="Ring bell in main room", value=True)
+c_send_to_breakouts = ft.Switch(label="Send text to sessions", value=True)
 t_send_to_breakouts = ft.TextField(
-    value="{i}. person can start now ∞ {i}. Person kann jetzt beginnen")
+    value="{i}. person can start now ∞ {i}. Person kann jetzt beginnen"
+)
 t_send_to_breakouts_fadeout = ft.TextField(value="Fadeout ∞ Ausklingen")
 c_sync_time_with_zoom = ft.Checkbox(label="Sync Time with Zoom", value=True)
 
@@ -39,7 +53,7 @@ email = "max@thesharing.space"
 def safe_settings(e):
     old_settings = get_settings()
     old_settings["group_size"] = int(dd_group_size.value)
-    with open('settings.txt', 'w') as f:
+    with open("settings.txt", "w") as f:
         yaml.dump(old_settings, f, sort_keys=False, default_flow_style=False)
     t_rounds.value = dd_group_size.value
     t_rounds.update()
@@ -58,15 +72,16 @@ def reset_settings_file():
         "tags_hosts": ["Host", "\.:\.", "Team"],
         "tags_lang1": ["DE", "De-", "De ", "^de ", "^de-", "^de/", "D E "],
         "tags_lang2": ["EN", "En-", "En ", "ES", "SP"],
-        "version": __version__}
-    with open('settings.txt', 'w') as f:
+        "version": __version__,
+    }
+    with open("settings.txt", "w") as f:
         yaml.dump(settings, f, sort_keys=False, default_flow_style=False)
     return settings
 
 
 def get_settings():
     try:
-        with open('settings.txt') as f:
+        with open("settings.txt") as f:
             settings = yaml.safe_load(f)
     except:
         print("Error loading settings, loading defaults")
@@ -75,16 +90,18 @@ def get_settings():
     return settings
 
 
-dd_group_size = ft.Dropdown(border="UNDERLINE", width=50,
-                            hint_text="Size",
-                            on_change=safe_settings,
-                            value=3,
-                            options=[
-                                ft.dropdown.Option(2),
-                                ft.dropdown.Option(3),
-                                ft.dropdown.Option(6),
-                            ],
-                            )
+dd_group_size = ft.Dropdown(
+    border="UNDERLINE",
+    width=50,
+    hint_text="Size",
+    on_change=safe_settings,
+    value=3,
+    options=[
+        ft.dropdown.Option(2),
+        ft.dropdown.Option(3),
+        ft.dropdown.Option(6),
+    ],
+)
 
 
 def gui(page: ft.Page):
@@ -110,7 +127,7 @@ def gui(page: ft.Page):
             "c_ring_bell": c_ring_bell.value,
             "dd_group_size": dd_group_size.value,
             "t_send_to_breakouts_fadeout": t_send_to_breakouts_fadeout.value,
-            "t_send_to_breakouts": t_send_to_breakouts.value
+            "t_send_to_breakouts": t_send_to_breakouts.value,
             # Add more inputs here...
         }
 
@@ -120,19 +137,20 @@ def gui(page: ft.Page):
         user_inputs = page.client_storage.get("user_inputs")
 
         t_checkin.value = user_inputs.get("t_checkin", t_checkin.value)
-        t_round_duration.value = user_inputs.get(
-            "t_round", t_round_duration.value)
+        t_round_duration.value = user_inputs.get("t_round", t_round_duration.value)
         t_fadeout.value = user_inputs.get("t_fadeout", t_fadeout.value)
         t_rounds.value = user_inputs.get("t_rounds", t_rounds.value)
         c_send_to_breakouts.value = user_inputs.get(
-            "c_send_to_breakouts", c_send_to_breakouts.value)
+            "c_send_to_breakouts", c_send_to_breakouts.value
+        )
         c_ring_bell.value = user_inputs.get("c_ring_bell", c_ring_bell.value)
-        dd_group_size.value = user_inputs.get(
-            "dd_group_size", dd_group_size.value)
+        dd_group_size.value = user_inputs.get("dd_group_size", dd_group_size.value)
         t_send_to_breakouts_fadeout.value = user_inputs.get(
-            "t_send_to_breakouts_fadeout", t_send_to_breakouts_fadeout.value)
+            "t_send_to_breakouts_fadeout", t_send_to_breakouts_fadeout.value
+        )
         t_send_to_breakouts.value = user_inputs.get(
-            "t_send_to_breakouts", t_send_to_breakouts.value)
+            "t_send_to_breakouts", t_send_to_breakouts.value
+        )
         # Restore more inputs here...
 
         # Update the GUI controls with restored values
@@ -170,9 +188,7 @@ def gui(page: ft.Page):
         b.disabled = False
         page.update()
 
-    b = ft.FloatingActionButton(
-        icon=ft.icons.PLAY_ARROW, on_click=play_button_clicked
-    )
+    b = ft.FloatingActionButton(icon=ft.icons.PLAY_ARROW, on_click=play_button_clicked)
 
     def update_total_time(e):
         try:
@@ -208,8 +224,9 @@ def gui(page: ft.Page):
             t_round_duration.border_color = "red"
 
         try:
-            total_time = (nr_of_rounds * round_duration +
-                          checkin_duration + fadeout_duration) * 60
+            total_time = (
+                nr_of_rounds * round_duration + checkin_duration + fadeout_duration
+            ) * 60
             l_total_time.value = str(total_time // 60) + ":00"
         except:
             total_time = 0
@@ -227,11 +244,11 @@ def gui(page: ft.Page):
         dlg_modal = ft.AlertDialog(
             modal=True,
             title=ft.Text("Sending Text to Breakouts..."),
-            content=ft.Text("Sending Text: \n"+text),
+            content=ft.Text("Sending Text: \n" + text),
             actions=[
                 ft.TextButton("STOP", on_click=close_dlg),
             ],
-            actions_alignment=ft.MainAxisAlignment.END
+            actions_alignment=ft.MainAxisAlignment.END,
         )
         page.dialog = dlg_modal
         dlg_modal.open = True
@@ -247,6 +264,7 @@ def gui(page: ft.Page):
                     page.update()
                     return True
                 else:
+
                     def close_banner(e):
                         page.banner.open = False
                         page.update()
@@ -254,12 +272,10 @@ def gui(page: ft.Page):
                     page.banner = ft.Banner(
                         bgcolor=ft.colors.AMBER_100,
                         leading=ft.Icon(
-                            ft.icons.WARNING_AMBER_ROUNDED, color=ft.colors.RED, size=40),
-                        content=ft.Text(
-                            "Text was not send!. Retrying... \n" + text
+                            ft.icons.WARNING_AMBER_ROUNDED, color=ft.colors.RED, size=40
                         ),
+                        content=ft.Text("Text was not send!. Retrying... \n" + text),
                         actions=[
-
                             ft.TextButton("close", on_click=close_banner),
                         ],
                     )
@@ -270,7 +286,7 @@ def gui(page: ft.Page):
                     time.sleep(3)  # Wait for a second before retrying
 
     def start_timer(e):
-        if l_total_time.value == '??:??':
+        if l_total_time.value == "??:??":
             t.value = "Please check your inputs!"
             page.snack_bar.open = True
             page.update()
@@ -299,10 +315,15 @@ def gui(page: ft.Page):
         try:
             if sync_time_with_zoom:
                 # Define remaining total time
-                remaining_total_time = util.get_time_left_in_breakouts()  # (hours, minutes, seconds)
+                remaining_total_time = (
+                    util.get_time_left_in_breakouts()
+                )  # (hours, minutes, seconds)
                 # Convert remaining total time to seconds
-                remaining_total_seconds = int(remaining_total_time[0]) * 3600 + int(
-                    remaining_total_time[1]) * 60 + int(remaining_total_time[2])
+                remaining_total_seconds = (
+                    int(remaining_total_time[0]) * 3600
+                    + int(remaining_total_time[1]) * 60
+                    + int(remaining_total_time[2])
+                )
                 # calculate starting time
                 start_time = time.time() - (total_time - remaining_total_seconds)
 
@@ -310,32 +331,31 @@ def gui(page: ft.Page):
                 elapsed_time = time.time() - start_time
 
                 # Determine in which phase you are
-                if elapsed_time <= checkin_duration*60:
+                if elapsed_time <= checkin_duration * 60:
                     phase = "Check-in"
-                    phase_duration = checkin_duration*60
+                    phase_duration = checkin_duration * 60
                     round_number = 0  # No round during check-in
                 else:
                     # Calculate elapsed time excluding check-in phase
-                    elapsed_time -= checkin_duration*60
+                    elapsed_time -= checkin_duration * 60
 
                     # Determine the number of complete rounds and remaining time
-                    complete_rounds = elapsed_time // (round_duration*60)
-                    remaining_time = elapsed_time % (round_duration*60)
+                    complete_rounds = elapsed_time // (round_duration * 60)
+                    remaining_time = elapsed_time % (round_duration * 60)
 
                     if complete_rounds < nr_of_rounds:
                         phase = "{i}. Person"
-                        phase_duration = round_duration*60
+                        phase_duration = round_duration * 60
                         round_number = complete_rounds + 1
                     else:
                         phase = "Fadeout"
-                        phase_duration = fadeout_duration*60
+                        phase_duration = fadeout_duration * 60
                         round_number = t_rounds.value
 
                 i = int(round_number)
 
                 # Calculate time left in the current phase
-                time_left_in_phase = phase_duration - \
-                    (elapsed_time % phase_duration)
+                time_left_in_phase = phase_duration - (elapsed_time % phase_duration)
         except:
             sync_time_with_zoom = False
             print("connection to zoom breakout window failed")
@@ -350,8 +370,7 @@ def gui(page: ft.Page):
                     duration = int(t_round_duration.value)
                     t_info.value = f"{i}. Person"
                     if c_send_to_breakouts.value:
-                        send_to_breakouts(
-                            t_send_to_breakouts.value.format(i=i))
+                        send_to_breakouts(t_send_to_breakouts.value.format(i=i))
                     if c_ring_bell.value:
                         util.make_a_sound()
                 elif i == t_rounds.value + 1:
@@ -379,8 +398,7 @@ def gui(page: ft.Page):
                     if c_ring_bell.value:
                         util.make_a_sound()
                     if c_send_to_breakouts.value:
-                        send_to_breakouts(
-                            t_send_to_breakouts.value.format(i=i))
+                        send_to_breakouts(t_send_to_breakouts.value.format(i=i))
 
             if sync_time_with_zoom:
                 end_time = start_time_current_round + time_left_in_phase
@@ -449,52 +467,30 @@ def gui(page: ft.Page):
     t_fadeout.on_change = update_total_time
 
     b_start_timer = ft.IconButton(
-        icon=ft.icons.PLAY_ARROW_ROUNDED, on_click=start_timer)
+        icon=ft.icons.PLAY_ARROW_ROUNDED, on_click=start_timer
+    )
     b_stop_timer = ft.IconButton(icon=ft.icons.STOP, on_click=stop_timer)
     timer = ft.Column(
         scroll=ft.ScrollMode.ALWAYS,
         height=page.height,
         controls=[
-            ft.Row([t_info, t_currenttime],
-                   alignment=ft.MainAxisAlignment.CENTER),
-
+            ft.Row([t_info, t_currenttime], alignment=ft.MainAxisAlignment.CENTER),
             ft.Row([pb, l_total_time]),
             ft.Row(
                 [b_start_timer, b_stop_timer],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
-            ft.Row([t_checkin, t_round_duration, t_fadeout],
-                   ),
+            ft.Row(
+                [t_checkin, t_round_duration, t_fadeout],
+            ),
             ft.ListTile(
-                leading=ft.Icon(
-                    ft.icons.GROUP),
+                leading=ft.Icon(ft.icons.GROUP),
                 title=ft.Text("How many Rounds?"),
                 trailing=t_rounds,
             ),
-            ft.ListTile(
-                title=c_send_to_breakouts
-            ),
-            ft.ListTile(
-                title=c_ring_bell
-            ),
-
-        ]
-    )
-
-    advanced_settings = ft.Column(controls=[
-        ft.ListTile(
-            title=ft.Text("Custom Text", theme_style=ft.TextThemeStyle.TITLE_LARGE)),
-        ft.ListTile(
-            title=ft.Text("Swithing to next person"),
-            subtitle=t_send_to_breakouts
-        ), ft.ListTile(
-            title=ft.Text("Check out started"),
-            subtitle=t_send_to_breakouts_fadeout
-        ),
-        ft.ListTile(
-            title=c_sync_time_with_zoom
-        ),]
-
+            ft.ListTile(title=c_send_to_breakouts),
+            ft.ListTile(title=c_ring_bell),
+        ],
     )
 
     def theme_changed(e):
@@ -504,13 +500,45 @@ def gui(page: ft.Page):
             else ft.ThemeMode.LIGHT
         )
         theme_switch.label = (
-            "Enable Night Theme" if page.theme_mode == ft.ThemeMode.LIGHT else "Return To Day Theme"
+            "Enable Night Theme"
+            if page.theme_mode == ft.ThemeMode.LIGHT
+            else "Return To Day Theme"
         )
         page.update()
 
     page.theme_mode = ft.ThemeMode.LIGHT
-    theme_switch = ft.Switch(
-        label="Enable Night Theme", on_change=theme_changed)
+    theme_switch = ft.Switch(label="Enable Night Theme", on_change=theme_changed)
+
+    advanced_settings = ft.Column(
+        scroll=ft.ScrollMode.ALWAYS,
+        spacing=0,
+        controls=[
+            ft.ExpansionTile(
+                title=ft.Text("Timer", theme_style=ft.TextThemeStyle.TITLE_LARGE),
+                affinity=ft.TileAffinity.LEADING,
+                initially_expanded=False,
+                controls=[
+                    ft.ListTile(
+                        title=ft.Text("Switching to next person"),
+                        subtitle=t_send_to_breakouts,
+                    ),
+                    ft.ListTile(
+                        title=ft.Text("Fadeout started"),
+                        subtitle=t_send_to_breakouts_fadeout,
+                    ),
+                    ft.ListTile(title=c_sync_time_with_zoom),
+                ],
+            ),
+            ft.ExpansionTile(
+                title=ft.Text("Other", theme_style=ft.TextThemeStyle.TITLE_LARGE),
+                affinity=ft.TileAffinity.LEADING,
+                initially_expanded=True,
+                controls=[
+                    ft.ListTile(title=theme_switch),
+                ],
+            ),
+        ],
+    )
 
     def email2clipboard(e):
         page.set_clipboard(email)
@@ -526,32 +554,23 @@ def gui(page: ft.Page):
             ft.Tab(
                 tab_content=ft.Icon(ft.icons.GROUPS),
                 content=ft.Container(
-
                     content=ft.Column(
                         [
-
                             ft.ListTile(
-
-
-                                leading=ft.Icon(
-                                    ft.icons.GROUP),
+                                leading=ft.Icon(ft.icons.GROUP),
                                 title=ft.Text("Group Size"),
                                 trailing=dd_group_size,
                             ),
                             ft.ListTile(
-                                leading=ft.Icon(
-                                    ft.icons.SETTINGS),
-                                title=ft.Text(
-                                    "Advanced Settings"),
-                                on_click=open_settings
-                            )
-
+                                leading=ft.Icon(ft.icons.SETTINGS),
+                                title=ft.Text("Advanced Settings"),
+                                on_click=open_settings,
+                            ),
                         ],
                         spacing=0,
                     ),
                     padding=ft.padding.symmetric(vertical=0),
-                )
-
+                ),
             ),
             ft.Tab(
                 tab_content=ft.Icon(ft.icons.TIMER),
@@ -565,35 +584,48 @@ def gui(page: ft.Page):
                 icon=ft.icons.INFO,
                 content=ft.Column(
                     controls=[
-                        ft.ListTile(
-                            title=theme_switch
-                        ),
                         ft.Text("Contact", size=18),
                         ft.Text(
                             "If you have any questions or suggestions, please contact me at:",
                         ),
-                        ft.ListTile(url="mailto:max@thesharingspace.de",
-                                    title=ft.Text("max@thesharingspace.de"), on_click=email2clipboard
-                                    ),
+                        ft.ListTile(
+                            url="mailto:max@thesharingspace.de",
+                            title=ft.Text("max@thesharingspace.de"),
+                            on_click=email2clipboard,
+                        ),
                         ft.Text("Support this project", size=18),
                         ft.Text(
                             "This project took many hours of work. Your support is highly appriciated <3",
                         ),
-
                         ft.ListTile(
-                            title=ft.OutlinedButton(icon=ft.icons.FAVORITE,
-                                                    text="Donate", url="https://www.paypal.com/paypalme/maxschwindt", tooltip="paypal.me/maxschwindt",)
+                            title=ft.OutlinedButton(
+                                icon=ft.icons.FAVORITE,
+                                text="Donate",
+                                url="https://www.paypal.com/paypalme/maxschwindt",
+                                tooltip="paypal.me/maxschwindt",
+                            )
                         ),
-                        ft.Row([ft.Text("© 2022-" + str(time.gmtime(time.time()).tm_year) + " Max Schwindt"),
-                               ft.IconButton(icon=ft.icons.CODE, url="https://github.com/MaxWindt/zoom-triad-tool")]),
-                        ft.Text("Version: " + __version__)],
+                        ft.Row(
+                            [
+                                ft.Text(
+                                    "© 2022-"
+                                    + str(time.gmtime(time.time()).tm_year)
+                                    + " Max Schwindt"
+                                ),
+                                ft.IconButton(
+                                    icon=ft.icons.CODE,
+                                    url="https://github.com/MaxWindt/zoom-triad-tool",
+                                ),
+                            ]
+                        ),
+                        ft.Text("Version: " + __version__),
+                    ],
                     alignment=ft.CrossAxisAlignment.CENTER,
-
                 ),
             ),
         ],
-        width=400, height=500
-
+        width=400,
+        height=500,
     )
 
     page.floating_action_button = b
