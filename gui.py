@@ -6,7 +6,7 @@ import clean_groups
 import clean_groups
 import webbrowser
 import util
-
+import breakout_monitor
 
 __version__ = "beta 0.3.1"
 development_mode = False
@@ -158,6 +158,9 @@ def gui(page: ft.Page):
 
     def open_settings(e):
         webbrowser.open("settings.txt")
+
+    def open_room_monitor(e):
+        ft.app(target=breakout_monitor.main)
 
     def on_tab_change(e):
         if tabs.selected_index != 0:
@@ -597,6 +600,11 @@ def gui(page: ft.Page):
                                 leading=ft.Icon(ft.icons.GROUP),
                                 title=ft.Text("Group Size"),
                                 trailing=dd_group_size,
+                            ),
+                            ft.ListTile(
+                                leading=ft.Icon(ft.icons.MONITOR_HEART_OUTLINED),
+                                title=ft.Text("Room Monitor"),
+                                on_click=open_room_monitor,
                             ),
                             ft.ListTile(
                                 leading=ft.Icon(ft.icons.SETTINGS),
