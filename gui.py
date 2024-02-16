@@ -1,3 +1,4 @@
+import os
 import time
 import flet as ft
 import yaml
@@ -85,7 +86,6 @@ def get_settings():
             settings = yaml.safe_load(f)
     except:
         print("Error loading settings, loading defaults")
-        settings = reset_settings_file()
         settings = reset_settings_file()
     return settings
 
@@ -509,6 +509,42 @@ def gui(page: ft.Page):
     page.theme_mode = ft.ThemeMode.LIGHT
     theme_switch = ft.Switch(label="Enable Night Theme", on_change=theme_changed)
 
+    def close_dlg_reset_settings(e):
+        dlg_reset_settings.open = False
+        page.update()
+
+    def reset_settings(e):
+        print("Resetting Settings")
+        page.client_storage.clear()
+        reset_settings_file()
+        close_dlg_reset_settings(e)
+        page.window_close()
+        os.execl("rcc.exe", "rcc.exe", "run")
+
+    dlg_reset_settings = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Please confirm"),
+        content=ft.Text("Do you really want to reset all settings?"),
+        actions=[
+            ft.TextButton("Yes", on_click=reset_settings),
+            ft.TextButton("No", on_click=close_dlg_reset_settings),
+        ],
+        actions_alignment=ft.MainAxisAlignment.END,
+        on_dismiss=lambda e: print("Modal dialog dismissed!"),
+    )
+
+    def open_dlg_reset_settings(e):
+        page.dialog = dlg_reset_settings
+        dlg_reset_settings.open = True
+        page.update()
+
+    b_delete_settings = ft.ElevatedButton(
+        "Reset Settings",
+        icon="delete",
+        icon_color="red",
+        on_click=open_dlg_reset_settings,
+    )
+
     advanced_settings = ft.Column(
         scroll=ft.ScrollMode.ALWAYS,
         spacing=0,
@@ -535,6 +571,7 @@ def gui(page: ft.Page):
                 initially_expanded=True,
                 controls=[
                     ft.ListTile(title=theme_switch),
+                    ft.ListTile(title=b_delete_settings),
                 ],
             ),
         ],
