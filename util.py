@@ -23,21 +23,28 @@ def click_input_no_movement(element):
 def send_text_to_zoom(text):
     try:
         # initialize the breakout window
-        app = pywinauto.Application(backend="uia").connect(
-            title_re="Breakout Sessions - Im Gange.*"
-        )
+        app = pywinauto.Application(backend="uia").connect(title_re="Breakout*")
 
-        app_wrapper = app.window(
-            title_re="Breakout Sessions - Im Gange.*"
-        ).wrapper_object()
+        app_wrapper = app.window(title_re="Breakout*").wrapper_object()
         name = app_wrapper._element_info.name
         app_buttons = app_wrapper.descendants(control_type="Button")
+        # check if Breakouts already started
+        broadcast_button = None
+
+        for control in app_buttons:
+            if control.texts()[0] == "Broadcast":
+                broadcast_button = control
+                break
+        broadcast_button.click()
+
         sending_text_btn = app_buttons[-2]
         sending_text_btn.click()
 
         app_menu = app_wrapper.descendants(control_type="MenuItem")
         send_text_menu = app_menu[0]
         send_voice_menu = app_menu[1]
+
+        number_of_buttons = len(app_buttons)
 
         click_input_no_movement(send_text_menu)
 
@@ -46,7 +53,7 @@ def send_text_to_zoom(text):
         app_buttons = app_wrapper.descendants(control_type="Button")
 
         # check if message window is visible. This will add another button
-        if len(app_buttons) == 7:
+        if len(app_buttons) == number_of_buttons + 1:
             app_buttons[0].click()
         else:
             raise ValueError("Message window is not visible")
