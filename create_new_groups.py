@@ -153,7 +153,7 @@ def room_buttons_only(breakout_window):
     mark_to_del = []
     for i in range(0, len(room_buttons) - 1):
         name = room_buttons[i]._element_info.name
-        if name == "Umbenennen":
+        if name == "Umbenennen" or name == "Rename":
             mark_to_del.extend([i, i + 1])  # & next Button "Löschen"
     for i in sorted(mark_to_del, reverse=True):
         del room_buttons[i]
