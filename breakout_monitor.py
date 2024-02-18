@@ -1,4 +1,5 @@
 import flet as ft
+import util
 
 
 def main(page: ft.Page):
@@ -150,9 +151,12 @@ def get_language_of_group(list_of_participants):
 
 
 def get_active_breakout_list():
-    app = pywinauto.Application(backend="uia").connect(title_re="Breakout Sessions.*")
 
-    breakout_window = app.window(title_re="Breakout Sessions.*").wrapper_object()
+    if util.get_breakout_window("all") == None:
+        print("Breakout window is not open")
+        exit()
+
+    breakout_window = util.get_breakout_window("all")
 
     tabs = breakout_window.descendants(control_type="TabItem")
     assigned = breakout_window.descendants(control_type="TreeItem")

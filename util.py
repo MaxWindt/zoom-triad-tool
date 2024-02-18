@@ -20,27 +20,73 @@ def click_input_no_movement(element):
     pyautogui.moveTo(pos)
 
 
+def get_breakout_window(condition="open"):
+    """Finds the breakout window in a given condition
+    Args:
+    condition: string
+        open, idle, or all
+
+    Returns:
+    Window object or None
+    """
+
+    # initialize the breakout window
+    window_title_open = "Breakout Sessions - Im Gange|Breakout Rooms - In Progress"
+    window_title_idle = (
+        "Breakout Sessions - Nicht begonnen|Breakout Rooms - Not Started"
+    )
+
+    if condition == "open":
+        window_title = window_title_open
+    if condition == "idle":
+        window_title = window_title_idle
+    elif condition == "all":
+        window_title = window_title_open + "|" + window_title_idle
+
+    try:
+        app = pywinauto.Application(backend="uia").connect(title_re=window_title)
+
+        breakout_window = app.window(title_re=window_title).wrapper_object()
+    except Exception:
+        return None
+
+    return breakout_window
+
+
+def get_idle_breakout_window():
+    # initialize the breakout window
+
+    window_title = "Breakout Sessions - Nicht begonnen|Breakout Rooms - Not Started"
+    try:
+        app = pywinauto.Application(backend="uia").connect(title_re=window_title)
+
+        app_wrapper = app.window(title_re=window_title).wrapper_object()
+    except Exception:
+        return None
+
+    return app_wrapper
+
+
 def send_text_to_zoom(text):
     try:
         # initialize the breakout window
-        app = pywinauto.Application(backend="uia").connect(title_re="Breakout*")
+        breakout_window = get_breakout_window("open")
 
-        app_wrapper = app.window(title_re="Breakout*").wrapper_object()
-        name = app_wrapper._element_info.name
-        app_buttons = app_wrapper.descendants(control_type="Button")
+        app_buttons = breakout_window.descendants(control_type="Button")
+
         # check if Breakouts already started
         broadcast_button = None
 
-        for control in app_buttons:
-            if control.texts()[0] == "Broadcast":
-                broadcast_button = control
-                break
-        broadcast_button.click()
+        # for control in app_buttons:
+        #     if control.texts()[0] == "Broadcast" or control.texts()[0] == "Übertragung":
+        #         broadcast_button = control
+        #         break
+        # broadcast_button.click()
 
         sending_text_btn = app_buttons[-2]
         sending_text_btn.click()
 
-        app_menu = app_wrapper.descendants(control_type="MenuItem")
+        app_menu = breakout_window.descendants(control_type="MenuItem")
         send_text_menu = app_menu[0]
         send_voice_menu = app_menu[1]
 
@@ -50,7 +96,7 @@ def send_text_to_zoom(text):
 
         send_keys_fast(text)
 
-        app_buttons = app_wrapper.descendants(control_type="Button")
+        app_buttons = breakout_window.descendants(control_type="Button")
 
         # check if message window is visible. This will add another button
         if len(app_buttons) == number_of_buttons + 1:
@@ -101,14 +147,9 @@ def get_time_left_in_breakouts():
 
     try:
         # initialize the breakout window
-        app = pywinauto.Application(backend="uia").connect(
-            title_re="Breakout Sessions - Im Gange.*"
-        )
+        breakout_window = get_breakout_window("open")
 
-        app_wrapper = app.window(
-            title_re="Breakout Sessions - Im Gange.*"
-        ).wrapper_object()
-        name = app_wrapper._element_info.name
+        name = breakout_window._element_info.name
 
         # Find the position of the opening parenthesis
         parenthesis_index = name.find("(")
@@ -135,3 +176,6 @@ if __name__ == "__main__":
     what = get_time_left_in_breakouts()
     print(what)
     send_text_to_zoom("what")
+    print(get_breakout_window("open"))
+    print(get_breakout_window("idle"))
+    print(get_breakout_window("all"))
