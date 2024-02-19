@@ -20,7 +20,7 @@ def click_input_no_movement(element):
     pyautogui.moveTo(pos)
 
 
-def get_breakout_window(condition="open"):
+def get_breakout_window(state="open"):
     """Finds the breakout window in a given condition
     Args:
     condition: string
@@ -36,11 +36,11 @@ def get_breakout_window(condition="open"):
         "Breakout Sessions - Nicht begonnen|Breakout Rooms - Not Started"
     )
 
-    if condition == "open":
+    if state == "open":
         window_title = window_title_open
-    if condition == "idle":
+    if state == "idle":
         window_title = window_title_idle
-    elif condition == "all":
+    elif state == "all":
         window_title = window_title_open + "|" + window_title_idle
 
     try:
@@ -73,15 +73,6 @@ def send_text_to_zoom(text):
         breakout_window = get_breakout_window("open")
 
         app_buttons = breakout_window.descendants(control_type="Button")
-
-        # check if Breakouts already started
-        broadcast_button = None
-
-        # for control in app_buttons:
-        #     if control.texts()[0] == "Broadcast" or control.texts()[0] == "Übertragung":
-        #         broadcast_button = control
-        #         break
-        # broadcast_button.click()
 
         sending_text_btn = app_buttons[-2]
         sending_text_btn.click()
