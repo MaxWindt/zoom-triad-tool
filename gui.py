@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import os
 import time
 import flet as ft
@@ -6,7 +8,7 @@ import clean_groups
 import clean_groups
 import webbrowser
 import util
-import breakout_monitor
+import gui_breakout_monitor
 
 __version__ = "beta 0.3.1"
 development_mode = False
@@ -160,7 +162,8 @@ def gui(page: ft.Page):
         webbrowser.open("settings.txt")
 
     def open_room_monitor(e):
-        ft.app(target=breakout_monitor.main)
+        page.client_storage.set("gui_breakout_monitor", True)
+        ft.app(target=gui_breakout_monitor.main)
 
     def on_tab_change(e):
         if tabs.selected_index != 0:
@@ -288,6 +291,41 @@ def gui(page: ft.Page):
                     page.update()
                     time.sleep(3)  # Wait for a second before retrying
 
+    def enable_timer_inputs():
+        b_start_timer.disabled = False
+        b_stop_timer.disabled = True
+        t_checkin.disabled = False
+        t_fadeout.disabled = False
+        t_round_duration.disabled = False
+        t_rounds.disabled = False
+
+    def disable_timer_inputs():
+        b_start_timer.disabled = True
+        b_stop_timer.disabled = False
+        t_checkin.disabled = True
+        t_fadeout.disabled = True
+        t_round_duration.disabled = True
+        t_rounds.disabled = True
+
+    def push_timer_values_to_gui_timer_fullscreen():
+        util.save_t_values(
+            {
+                "timer_running": True,
+                "l_total_time": l_total_time.value,
+                "pb": pb.value,
+                "t_info": t_info.value,
+                "t_currenttime": t_currenttime.value,
+            }
+        )
+
+    def open_timer_fullsize(e):
+        util.save_t_values({"timer_running": True})
+        subprocess.run(sys.executable + " gui_timer_fullscreen.py", shell=True)
+
+    def close_timer_fullsize(e):
+
+        util.save_t_values({"timer_running": False})
+
     def start_timer(e):
         if l_total_time.value == "??:??":
             t.value = "Please check your inputs!"
@@ -296,16 +334,11 @@ def gui(page: ft.Page):
             return
         save_user_inputs()
         total_time = update_total_time(e)
-        global timer_event
-        timer_event = ""
 
-        timer_running = True
-        b_start_timer.disabled = True
-        b_stop_timer.disabled = False
-        t_checkin.disabled = True
-        t_fadeout.disabled = True
-        t_round_duration.disabled = True
-        t_rounds.disabled = True
+        # mark timer as started
+        page.client_storage.set("triad_tool.timer_running", True)
+
+        disable_timer_inputs()
 
         t.value = "External audio shared?\nBreakout sessions window opened?"
         page.snack_bar.open = True
@@ -420,7 +453,10 @@ def gui(page: ft.Page):
             page.update(t_info)
             i += 1
             # Countdown loop
-            while timer_running and time.time() < end_time:
+            while (
+                page.client_storage.contains_key("triad_tool.timer_running")
+                and time.time() < end_time
+            ):
                 total_end_time = start_time + total_time
                 remaining_time = end_time - time.time()
                 remaining_total_time = total_end_time - time.time()
@@ -432,37 +468,34 @@ def gui(page: ft.Page):
                 l_total_time.value = f"{total_mins:02d}:{secs:02d}"
                 pb.value = progress
                 page.update()
+
+                push_timer_values_to_gui_timer_fullscreen()
+
                 time.sleep(1)
                 # Check for "Stop Timer" button press
-                if timer_event == "Stop Timer":
+                if (
+                    page.client_storage.contains_key("triad_tool.timer_running")
+                    == False
+                ):
                     i = t_rounds.value + 1
-                    timer_running = False
                     total_time = 0
                     t_currenttime.value = "00:00"
-                    b_start_timer.disabled = False
-                    b_stop_timer.disabled = True
-                    t_checkin.disabled = False
-                    t_fadeout.disabled = False
-                    t_round_duration.disabled = False
-                    t_rounds.disabled = False
+                    l_total_time.value = "00:00"
                     t_info.value = "Stopped"
+                    close_timer_fullsize(e)
+                    enable_timer_inputs()
                     page.update()
                     return
 
-        t_info.value = f"Finished"
+        t_info.value = "Finished"
         t_currenttime.value = "00:00"
-        b_start_timer.disabled = False
-        b_stop_timer.disabled = True
-        t_checkin.disabled = False
-        t_fadeout.disabled = False
-        t_round_duration.disabled = False
-        t_rounds.disabled = False
+        l_total_time.value = "00:00"
+        close_timer_fullsize(e)
+        enable_timer_inputs()
         page.update()
 
     def stop_timer(e):
-        global timer_event
-        timer_event = "Stop Timer"
-        timer_running = False
+        page.client_storage.remove("triad_tool.timer_running")
 
     t_rounds.on_change = update_total_time
     t_checkin.on_change = update_total_time
@@ -605,6 +638,16 @@ def gui(page: ft.Page):
                                 leading=ft.Icon(ft.icons.MONITOR_HEART_OUTLINED),
                                 title=ft.Text("Room Monitor"),
                                 on_click=open_room_monitor,
+                            ),
+                            ft.ListTile(
+                                leading=ft.Icon(ft.icons.MONITOR_HEART_OUTLINED),
+                                title=ft.Text("Timer"),
+                                on_click=open_timer_fullsize,
+                            ),
+                            ft.ListTile(
+                                leading=ft.Icon(ft.icons.MONITOR_HEART_OUTLINED),
+                                title=ft.Text("close_timer"),
+                                on_click=close_timer_fullsize,
                             ),
                             ft.ListTile(
                                 leading=ft.Icon(ft.icons.SETTINGS),

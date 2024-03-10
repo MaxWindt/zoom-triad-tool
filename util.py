@@ -6,6 +6,21 @@ import pyperclip
 # app = pywinauto.Application(backend="uia").connect(title_re="Breakout Sessions - Im Gange.*")
 # app_wrapper = app.window(title_re="Breakout Sessions - Im Gange.*").print_control_identifiers()
 
+import json
+
+temp_settings_filename = "t_settings.json"
+
+
+def save_t_values(settings):
+    with open(temp_settings_filename, "w") as file:
+        json.dump(settings, file)
+
+
+def load_t_values():
+    with open(temp_settings_filename, "r") as file:
+        settings = json.load(file)
+    return settings
+
 
 def send_keys_fast(value):
     prev_value = pyperclip.paste()

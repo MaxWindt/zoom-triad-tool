@@ -1,6 +1,12 @@
 import flet as ft
 import util
 
+monitor_running = True
+
+
+def stop_monitor():
+    monitor_running = False
+
 
 def main(page: ft.Page):
     data_table = ft.DataTable()
@@ -19,7 +25,7 @@ def main(page: ft.Page):
         ),
     )
     page.add(data_table)
-    while True:
+    while monitor_running == True:
         # Room Details determine languages for the whole ID and reduce to [Room Nr, Language, Nr of participants]
         try:
             room_details = get_language_of_group(get_active_breakout_list())
