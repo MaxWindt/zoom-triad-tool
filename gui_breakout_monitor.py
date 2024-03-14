@@ -1,3 +1,4 @@
+import os
 import flet as ft
 import util
 
@@ -25,7 +26,7 @@ def main(page: ft.Page):
         ),
     )
     page.add(data_table)
-    while monitor_running == True:
+    while os.path.isfile(util.temp_settings_filename):
         # Room Details determine languages for the whole ID and reduce to [Room Nr, Language, Nr of participants]
         try:
             room_details = get_language_of_group(get_active_breakout_list())
@@ -75,6 +76,7 @@ def main(page: ft.Page):
 
         page.update()
         time.sleep(1)
+    page.window_destroy()
 
 
 ## checks for changes while breakouts are running

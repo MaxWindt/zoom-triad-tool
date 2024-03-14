@@ -1,3 +1,4 @@
+import os
 import time
 import flet as ft
 import tkinter as tk
@@ -60,19 +61,22 @@ def main(page: ft.Page):
     )
     page.update()
 
-    while util.load_t_values()["timer_running"]:
-        values = util.load_t_values()
-
-        l_total_time.value = values["l_total_time"]
-        pb.value = values["pb"]
-        t_info.value = values["t_info"]
-        t_currenttime.value = values["t_currenttime"]
-
-        page.update()
+    while (
+        os.path.isfile(util.temp_settings_filename)
+        and "timer_running" in util.load_t_values()
+    ):
         time.sleep(1)
-        print(page.client_storage.contains_key("triad_tool.timer_running"))
-        if l_total_time.value == "00:00":
-            page.window_destroy()
+        try:
+            values = util.load_t_values()
+            l_total_time.value = values["l_total_time"]
+            pb.value = values["pb"]
+            t_info.value = values["t_info"]
+            t_currenttime.value = values["t_currenttime"]
+
+            page.update()
+        except:
+            print("Timer not running")
+
     page.window_destroy()
 
 

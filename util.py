@@ -22,6 +22,15 @@ def load_t_values():
     return settings
 
 
+def delete_t_value(settings, tag):
+    # Remove key from dictionary
+    del settings[tag]
+
+    # Serialize data and write back to file
+    with open(temp_settings_filename, "w") as file:
+        json.dump(settings, file)
+
+
 def send_keys_fast(value):
     prev_value = pyperclip.paste()
     pyperclip.copy(value)

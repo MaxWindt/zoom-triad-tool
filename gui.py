@@ -112,6 +112,15 @@ def gui(page: ft.Page):
     page.window_always_on_top = True
     page.window_width = 300
     page.window_height = 300
+
+    def window_event(e):
+        if e.data == "close":
+            stop_timer(e)
+            os.remove("t_settings.json")
+            page.window_destroy()
+
+    page.window_prevent_close = True
+    page.on_window_event = window_event
     t = ft.Text()
     tabs = ft.Tab()
     page.snack_bar = ft.SnackBar(
@@ -163,7 +172,7 @@ def gui(page: ft.Page):
 
     def open_room_monitor(e):
         page.client_storage.set("gui_breakout_monitor", True)
-        ft.app(target=gui_breakout_monitor.main)
+        subprocess.run(sys.executable + " gui_breakout_monitor.py", shell=True)
 
     def on_tab_change(e):
         if tabs.selected_index != 0:
@@ -292,20 +301,22 @@ def gui(page: ft.Page):
                     time.sleep(3)  # Wait for a second before retrying
 
     def enable_timer_inputs():
-        b_start_timer.disabled = False
+        b_start_timer.visible = True
         b_stop_timer.disabled = True
         t_checkin.disabled = False
         t_fadeout.disabled = False
         t_round_duration.disabled = False
         t_rounds.disabled = False
+        b_timer_fullscreen.visible = False
 
     def disable_timer_inputs():
-        b_start_timer.disabled = True
+        b_start_timer.visible = False
         b_stop_timer.disabled = False
         t_checkin.disabled = True
         t_fadeout.disabled = True
         t_round_duration.disabled = True
         t_rounds.disabled = True
+        b_timer_fullscreen.visible = True
 
     def push_timer_values_to_gui_timer_fullscreen():
         util.save_t_values(
@@ -319,12 +330,10 @@ def gui(page: ft.Page):
         )
 
     def open_timer_fullsize(e):
+        b_timer_fullscreen.disabled = True
         util.save_t_values({"timer_running": True})
         subprocess.run(sys.executable + " gui_timer_fullscreen.py", shell=True)
-
-    def close_timer_fullsize(e):
-
-        util.save_t_values({"timer_running": False})
+        b_timer_fullscreen.disabled = False
 
     def start_timer(e):
         if l_total_time.value == "??:??":
@@ -336,7 +345,7 @@ def gui(page: ft.Page):
         total_time = update_total_time(e)
 
         # mark timer as started
-        page.client_storage.set("triad_tool.timer_running", True)
+        util.save_t_values({"timer_running": True})
 
         disable_timer_inputs()
 
@@ -453,10 +462,7 @@ def gui(page: ft.Page):
             page.update(t_info)
             i += 1
             # Countdown loop
-            while (
-                page.client_storage.contains_key("triad_tool.timer_running")
-                and time.time() < end_time
-            ):
+            while util.load_t_values()["timer_running"] and time.time() < end_time:
                 total_end_time = start_time + total_time
                 remaining_time = end_time - time.time()
                 remaining_total_time = total_end_time - time.time()
@@ -473,16 +479,12 @@ def gui(page: ft.Page):
 
                 time.sleep(1)
                 # Check for "Stop Timer" button press
-                if (
-                    page.client_storage.contains_key("triad_tool.timer_running")
-                    == False
-                ):
+                if not "timer_running" in util.load_t_values():
                     i = t_rounds.value + 1
                     total_time = 0
                     t_currenttime.value = "00:00"
                     l_total_time.value = "00:00"
                     t_info.value = "Stopped"
-                    close_timer_fullsize(e)
                     enable_timer_inputs()
                     page.update()
                     return
@@ -490,12 +492,13 @@ def gui(page: ft.Page):
         t_info.value = "Finished"
         t_currenttime.value = "00:00"
         l_total_time.value = "00:00"
-        close_timer_fullsize(e)
+        stop_timer(e)
         enable_timer_inputs()
         page.update()
 
     def stop_timer(e):
-        page.client_storage.remove("triad_tool.timer_running")
+        settings = util.load_t_values()
+        util.delete_t_value(settings, "timer_running")
 
     t_rounds.on_change = update_total_time
     t_checkin.on_change = update_total_time
@@ -506,6 +509,9 @@ def gui(page: ft.Page):
         icon=ft.icons.PLAY_ARROW_ROUNDED, on_click=start_timer
     )
     b_stop_timer = ft.IconButton(icon=ft.icons.STOP, on_click=stop_timer)
+    b_timer_fullscreen = ft.IconButton(
+        icon=ft.icons.OPEN_IN_FULL, on_click=open_timer_fullsize, visible=False
+    )
     timer = ft.Column(
         scroll=ft.ScrollMode.ALWAYS,
         height=page.height,
@@ -513,7 +519,7 @@ def gui(page: ft.Page):
             ft.Row([t_info, t_currenttime], alignment=ft.MainAxisAlignment.CENTER),
             ft.Row([pb, l_total_time]),
             ft.Row(
-                [b_start_timer, b_stop_timer],
+                [b_start_timer, b_stop_timer, b_timer_fullscreen],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
             ft.Row(
@@ -638,16 +644,6 @@ def gui(page: ft.Page):
                                 leading=ft.Icon(ft.icons.MONITOR_HEART_OUTLINED),
                                 title=ft.Text("Room Monitor"),
                                 on_click=open_room_monitor,
-                            ),
-                            ft.ListTile(
-                                leading=ft.Icon(ft.icons.MONITOR_HEART_OUTLINED),
-                                title=ft.Text("Timer"),
-                                on_click=open_timer_fullsize,
-                            ),
-                            ft.ListTile(
-                                leading=ft.Icon(ft.icons.MONITOR_HEART_OUTLINED),
-                                title=ft.Text("close_timer"),
-                                on_click=close_timer_fullsize,
                             ),
                             ft.ListTile(
                                 leading=ft.Icon(ft.icons.SETTINGS),
