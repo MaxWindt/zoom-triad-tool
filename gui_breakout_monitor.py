@@ -11,6 +11,7 @@ def stop_monitor():
 
 def main(page: ft.Page):
     data_table = ft.DataTable()
+    page.window_left = page.window_left + 300
     page.window_width = 300
     page.add(
         ft.Row(

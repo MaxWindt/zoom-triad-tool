@@ -112,11 +112,14 @@ def gui(page: ft.Page):
     page.window_always_on_top = True
     page.window_width = 300
     page.window_height = 300
+    util.save_t_values({"open": True})
 
     def window_event(e):
         if e.data == "close":
-            stop_timer(e)
-            os.remove("t_settings.json")
+            try:
+                os.remove("t_settings.json")
+            except:
+                print("Timer already stopped")
             page.window_destroy()
 
     page.window_prevent_close = True
@@ -171,7 +174,6 @@ def gui(page: ft.Page):
         webbrowser.open("settings.txt")
 
     def open_room_monitor(e):
-        page.client_storage.set("gui_breakout_monitor", True)
         subprocess.run(sys.executable + " gui_breakout_monitor.py", shell=True)
 
     def on_tab_change(e):
