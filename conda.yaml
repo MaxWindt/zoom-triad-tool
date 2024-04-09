@@ -1,11 +1,11 @@
 channels:
-  # Define conda channels here. 
+  # Define conda channels here.
   - conda-forge
 
 dependencies:
-  # Define conda packages here. 
+  # Define conda packages here.
   # If available, always prefer the conda version of a package, installation will be faster and more efficient.
-  # https://anaconda.org/search  
+  # https://anaconda.org/search
   - python>=3.10.13
   - numpy==1.26.4
   - PyAutoGUI==0.9.54
@@ -13,11 +13,11 @@ dependencies:
   - pywinauto==0.6.8
   - PyYAML==6.0
   - pygame==2.5.2
-  - flet==0.21.0
-  #- pip
+  - flet==0.21.1
+  - nodejs==20.9.0
 
-  #- pip:
-
-    # Define pip packages here. 
-    # https://pypi.org/
-    
+  - pip:
+      # Define pip packages here.
+      # https://pypi.org/
+      - robotframework-browser==18.3.0
+# rccPostInstall:

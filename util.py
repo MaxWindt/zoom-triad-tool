@@ -187,6 +187,53 @@ def get_time_left_in_breakouts():
     return time_components
 
 
+def start_web_module():
+
+    import Browser
+
+    global browser
+    browser = Browser.Browser()
+
+    browser.new_browser(headless=False)
+    browser.new_page(
+        "http://127.0.0.1:9999/meeting.html?name=TG9jYWwzLjUuMldpbjEwI2ZpcmVmb3gvMTI0LjA%3D&mn=3858026425&email=&pwd=1&role=0&lang=en-US&signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBLZXkiOiJVVWl3Mm84RkROcVlHRmZEMXh4TkRlMHhDQ25FdFpPb0wyODkiLCJzZGtLZXkiOiJVVWl3Mm84RkROcVlHRmZEMXh4TkRlMHhDQ25FdFpPb0wyODkiLCJpYXQiOjE3MTI2NTc2ODgsImV4cCI6MTcxMjY2NDg4OCwibW4iOjM4NTgwMjY0MjUsInJvbGUiOjB9.A-BRbmfl8fpbL-EBofq90W0GxI7fuCGfMHKejqic2Dg&china=0&sdkKey=UUiw2o8FDNqYGFfD1xxNDe0xCCnEtZOoL289"
+    )
+
+
+def web_getCurrentUser():
+    User = browser.evaluate_javascript(
+        None,
+        """() => {
+            return new Promise(resolve => {
+                ZoomMtg.getCurrentUser({
+                    success: function(res) {
+                        resolve(res.result.currentUser);
+                    },
+                });
+            });
+            }
+            """,
+    )
+    return User
+
+
+def web_getUnassignedAttendeeList():
+    Attendees = browser.evaluate_javascript(
+        None,
+        """() => {
+            return new Promise(resolve => {
+                ZoomMtg.getUnassignedAttendeeList({
+                    success: function(res) {
+                        resolve(res);
+                    },
+                });
+            });
+            }
+            """,
+    )
+    return Attendees
+
+
 if __name__ == "__main__":
     what = get_time_left_in_breakouts()
     print(what)
