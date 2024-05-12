@@ -19,5 +19,6 @@ dependencies:
   - pip:
       # Define pip packages here.
       # https://pypi.org/
-      - robotframework-browser==18.3.0
-# rccPostInstall:
+      - playwright==1.42.0
+rccPostInstall:
+  - playwright install chromium

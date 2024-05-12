@@ -132,3 +132,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+t_settings.json
+test.py
+playwright-log*

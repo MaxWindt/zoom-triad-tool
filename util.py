@@ -1,3 +1,4 @@
+import time
 import pyautogui
 import pygame
 import pywinauto
@@ -189,19 +190,20 @@ def get_time_left_in_breakouts():
 
 def start_web_module():
 
-    import Browser
+    from playwright.sync_api import sync_playwright
 
-    global browser
-    browser = Browser.Browser()
+    p = sync_playwright().start()
 
-    browser.new_browser(headless=False)
-    browser.new_page(
-        "http://127.0.0.1:9999/meeting.html?name=TG9jYWwzLjUuMldpbjEwI2ZpcmVmb3gvMTI0LjA%3D&mn=3858026425&email=&pwd=1&role=0&lang=en-US&signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBLZXkiOiJVVWl3Mm84RkROcVlHRmZEMXh4TkRlMHhDQ25FdFpPb0wyODkiLCJzZGtLZXkiOiJVVWl3Mm84RkROcVlHRmZEMXh4TkRlMHhDQ25FdFpPb0wyODkiLCJpYXQiOjE3MTI2NTc2ODgsImV4cCI6MTcxMjY2NDg4OCwibW4iOjM4NTgwMjY0MjUsInJvbGUiOjB9.A-BRbmfl8fpbL-EBofq90W0GxI7fuCGfMHKejqic2Dg&china=0&sdkKey=UUiw2o8FDNqYGFfD1xxNDe0xCCnEtZOoL289"
+    browser = p.chromium.launch(headless=False)
+    page = browser.new_page()
+    page.goto(
+        "http://127.0.0.1:9999/meeting.html?name=TG9jYWwzLjUuMldpbjEwI2ZpcmVmb3gvMTI0LjA%3D&mn=3858026425&email=&pwd=1&role=0&lang=en-US&signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBLZXkiOiJVVWl3Mm84RkROcVlHRmZEMXh4TkRlMHhDQ25FdFpPb0wyODkiLCJzZGtLZXkiOiJVVWl3Mm84RkROcVlHRmZEMXh4TkRlMHhDQ25FdFpPb0wyODkiLCJpYXQiOjE3MTI2OTM5MjksImV4cCI6MTcxMjcwMTEyOSwibW4iOjM4NTgwMjY0MjUsInJvbGUiOjB9.sgCYG5VimWDylNANLe2LVl0WwY4gJqxikqhiJA9yLB8&china=0&sdkKey=UUiw2o8FDNqYGFfD1xxNDe0xCCnEtZOoL289"
     )
+    return page
 
 
-def web_getCurrentUser():
-    User = browser.evaluate_javascript(
+def web_getCurrentUser(page):
+    User = page.evaluate(
         None,
         """() => {
             return new Promise(resolve => {
@@ -217,27 +219,73 @@ def web_getCurrentUser():
     return User
 
 
-def web_getUnassignedAttendeeList():
-    Attendees = browser.evaluate_javascript(
-        None,
+def assign_user_to_breakout_room(
+    page, target_room_id, user_id, success_callback=None, error_callback=None
+):
+    return page.evaluate(
+        """(args) => {
+        return new Promise((resolve, reject) => {
+            ZoomMtg.assignUserToBreakoutRoom({
+                success: (res) => {
+                    if (args.success) args.success(res);
+                    resolve(res);
+                },
+                error: (err) => {
+                    if (args.error) args.error(err);
+                    reject(err);
+                },
+                targetRoomId: args.targetRoomId,
+                userId: args.userId
+            });
+        });
+    }""",
+        {
+            "success": success_callback,
+            "error": error_callback,
+            "targetRoomId": target_room_id,
+            "userId": user_id,
+        },
+    )
+
+
+def web_getBreakoutRooms(page):
+    Attendees = page.evaluate(
         """() => {
             return new Promise(resolve => {
-                ZoomMtg.getUnassignedAttendeeList({
+                ZoomMtg.getBreakoutRooms({
                     success: function(res) {
                         resolve(res);
                     },
+                    error: function (error) {
+        reject(error);
+      },
                 });
             });
             }
             """,
     )
-    return Attendees
+    return Attendees["result"]
+
+
+def filter_participant_list(original_list):
+    extracted_list = []
+    for item in original_list:
+        extracted_item = {
+            "displayName": item["displayName"],
+            "participantUUID": item["participantUUID"],
+            "isCoHost": item["isCoHost"],
+            "muted": item["muted"],
+        }
+        extracted_list.append(extracted_item)
+    return extracted_list
+
+
+def test():
+    browser = p.chromium.launch(headless=False, slow_mo=50)
+    page = browser.new_page()
+    page.goto("https://playwright.dev/")
+    page.screenshot(path="example.png")
 
 
 if __name__ == "__main__":
-    what = get_time_left_in_breakouts()
-    print(what)
-    send_text_to_zoom("what")
-    print(get_breakout_window("open"))
-    print(get_breakout_window("idle"))
-    print(get_breakout_window("all"))
+    test()

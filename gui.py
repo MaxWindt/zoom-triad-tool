@@ -627,6 +627,13 @@ def gui(page: ft.Page):
         page.snack_bar.open = True
         page.update()
 
+    def open_test(e):
+        import test_playwright
+
+        page = test_playwright.run()
+        test_playwright.allow_unmute(page)
+        test_playwright.disallow_unmute(page)
+
     tabs = ft.Tabs(
         selected_index=0,
         animation_duration=300,
@@ -651,6 +658,11 @@ def gui(page: ft.Page):
                                 leading=ft.Icon(ft.icons.SETTINGS),
                                 title=ft.Text("Advanced Settings"),
                                 on_click=open_settings,
+                            ),
+                            ft.ListTile(
+                                leading=ft.Icon(ft.icons.SETTINGS),
+                                title=ft.Text("test"),
+                                on_click=open_test,
                             ),
                         ],
                         spacing=0,
