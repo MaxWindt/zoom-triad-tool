@@ -162,17 +162,13 @@ def room_buttons_only(breakout_window):
     return room_buttons
 
 
-def assign_participants(breakout_window, participants_arr):
-    # start participants list
-    # send_keys("{TAB}{TAB}{TAB}{SPACE}")
-    participant_list = get_breakout_participants_list(breakout_window)
-    participant_buttons = breakout_window.descendants(control_type="CheckBox")
+def assign_participants_to_room(participants_arr, participant_list_raw, room_id, page):
     empty_seat = 0
     for name in participants_arr:
         if name != "inf" and isinstance(name, str):
-            id = np.flatnonzero(np.chararray.find(participant_list, name) != -1)
+            user_id = util.find_participant_UUID(name, participant_list_raw)
             for x in id:  # if a name is doubled use only first
-                participant_buttons[int(x)].toggle()
+                util.web_assign_user_to_breakout_room(page, room_id, user_id)
                 break
         else:
             empty_seat = empty_seat + 1
@@ -200,43 +196,22 @@ def update_list_positions(id_array, removed_ids):
 def breakout_assignment(
     hosts, notriad, participants_in_rooms, placeholder_rooms, breakout_window
 ):
-    breakout_buttons = room_buttons_only(breakout_window)  # [1] = room 1
-
     # main loop
     row = 0
     for room in range(2 + len(participants_in_rooms)):  # specialrooms+participant_rooms
         if room == 0:
-            breakout_buttons[room + 1].click()  # [1] = room 1
-            # rename_room("Teamroom")
-            assign_participants(breakout_window, hosts)
-            # notriad = update_list_positions(notriad,hosts)
-            # participants_in_rooms = update_list_positions(participants_in_rooms,hosts)
-            # next_room()
-            # print(str(hosts).encode(sys.stdout.encoding, errors='replace'))
-
+            room_id = Breakout_Rooms["rooms"][room]["boId"]
+            assign_participants_to_room(breakout_window, hosts)
         elif room == 1:
-            breakout_buttons[room + 1].click()  # [1] = room 1
-            # rename_room("No Triad")
-            assign_participants(breakout_window, notriad)
-            # participants_in_rooms = update_list_positions(participants_in_rooms,notriad)
-            # next_room()
-            # print(str(notriad).encode(sys.stdout.encoding, errors='replace'))
-
-        # elif room == 2:
-        #     for i in range(placeholder_rooms):
-        #         next_room()
-        #         print("jump over")
-        #     # no clue why it is needed but this is the only way the first room collapses
-        #     send_keys("{LEFT}")
+            room_id = Breakout_Rooms["rooms"][room]["boId"]
+            assign_participants_to_room(notriad, participant_list_raw, room_id, page)
         else:
-            breakout_buttons[room + placeholder_rooms + 1].click()  # [1] = room 1
-            participant_ids = participants_in_rooms[row]
-            assign_participants(breakout_window, participant_ids)
-            # participants_in_rooms = update_list_positions(participants_in_rooms,participant_ids)
-            # print(participant_ids)
+            room_id = Breakout_Rooms["rooms"][room + placeholder_rooms]["boId"]
+            participant_group = participants_in_rooms[row]
+            assign_participants_to_room(
+                participant_group, participant_list_raw, room_id, page
+            )
             row = row + 1
-            # send_keys("{LEFT}")
-            # next_room()
 
     # print(str(participants_in_rooms).encode(sys.stdout.encoding, errors='replace'))
 
@@ -306,9 +281,320 @@ def create_new_groups(settings):
 
 
 if __name__ == "__main__":
+    page = util.start_web_module()
+    Breakout_Rooms = util.web_getBreakoutRooms(page)
 
-    create_new_groups(settings="ss")
+    participant_list_raw = Breakout_Rooms["unassigned"]
+    rooms_list = Breakout_Rooms["rooms"]
+
+    participant_list_raw = [
+        {
+            "participantId": 16778240,
+            "displayName": "Max",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": False,
+            "isHold": False,
+            "persistentID": "BCEE6479-FF74-D64B-6E17-85DDFA2CADD2",
+            "participantUUID": "BCEE6479-FF74-D64B-6E17-85DDFA2CADD2",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16783360,
+            "displayName": "DE - Anna - tafhb",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "52F66BEF-4C6B-5F43-1AF7-1F65BB102D00",
+            "participantUUID": "52F66BEF-4C6B-5F43-1AF7-1F65BB102D00",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16784384,
+            "displayName": "DE - Maria - zrjzt",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "32198124-CC93-0164-F812-A2094BF0BDEE",
+            "participantUUID": "32198124-CC93-0164-F812-A2094BF0BDEE",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16785408,
+            "displayName": "DE/EN - Carlos - 4lrk0",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "95FF50E3-4423-74E6-99A8-4302C124742D",
+            "participantUUID": "95FF50E3-4423-74E6-99A8-4302C124742D",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16786432,
+            "displayName": "DE - Jennifer - f69ky",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "CE91A3B9-5ED7-4F44-0ACA-8D82B03C8171",
+            "participantUUID": "CE91A3B9-5ED7-4F44-0ACA-8D82B03C8171",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16787456,
+            "displayName": "DE/EN - Matthias - kuwu7",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "12516D36-62B9-B66B-57AF-748FC3BDBD5F",
+            "participantUUID": "12516D36-62B9-B66B-57AF-748FC3BDBD5F",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16788480,
+            "displayName": "EN - Sabine - c3yrs",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "C7870EDF-5F49-AF57-BA8D-F35BC354EDBE",
+            "participantUUID": "C7870EDF-5F49-AF57-BA8D-F35BC354EDBE",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16789504,
+            "displayName": "EN - Sarah - ogr2u",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "97EE20F2-EB0A-CE1C-AF4F-ED00EB466DE8",
+            "participantUUID": "97EE20F2-EB0A-CE1C-AF4F-ED00EB466DE8",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16790528,
+            "displayName": "DE/EN - David - g48pd",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "170FEF94-0223-B99F-AF8E-4CFBD190C303",
+            "participantUUID": "170FEF94-0223-B99F-AF8E-4CFBD190C303",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16791552,
+            "displayName": "NT - Javier - ibrrb",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "1E8F819F-475C-A276-85FB-25B2A3963EDF",
+            "participantUUID": "1E8F819F-475C-A276-85FB-25B2A3963EDF",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16792576,
+            "displayName": "EN - Sofía - sjgi1",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "236BE152-901B-9495-EA1E-09D04F28ED6E",
+            "participantUUID": "236BE152-901B-9495-EA1E-09D04F28ED6E",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16793600,
+            "displayName": "EN - Sarah - se4td",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "6D8A8DA0-125B-2D7D-C551-53B32157FA12",
+            "participantUUID": "6D8A8DA0-125B-2D7D-C551-53B32157FA12",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16794624,
+            "displayName": "EN - Carlos - uc2uw",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "8AF86002-9A25-B8BE-2112-71565785EA31",
+            "participantUUID": "8AF86002-9A25-B8BE-2112-71565785EA31",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16795648,
+            "displayName": "DE - Isabella - 9w71e",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "977E8357-E80C-35E0-C158-827F1AAD0CC1",
+            "participantUUID": "977E8357-E80C-35E0-C158-827F1AAD0CC1",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16796672,
+            "displayName": "NT - Antonio - 2imwz",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "F837CF48-7523-BAB9-85AA-AC0561730B8A",
+            "participantUUID": "F837CF48-7523-BAB9-85AA-AC0561730B8A",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16797696,
+            "displayName": "DE/EN - John - ivc4v",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "FF9A4E3D-80F5-F07A-F6C7-D3FF22A25C18",
+            "participantUUID": "FF9A4E3D-80F5-F07A-F6C7-D3FF22A25C18",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16798720,
+            "displayName": "DE/EN - Carmen - n3nyt",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "0A3F94E4-42CF-FA38-01D9-9696BE838D93",
+            "participantUUID": "0A3F94E4-42CF-FA38-01D9-9696BE838D93",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16799744,
+            "displayName": "DE - Jessica - 61qlr",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "A00EA774-DBED-B35C-AF52-9E1A8346F7D5",
+            "participantUUID": "A00EA774-DBED-B35C-AF52-9E1A8346F7D5",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16800768,
+            "displayName": "NT - Ashley - ms71g",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "C8531BB1-8671-B935-F850-109D7039496E",
+            "participantUUID": "C8531BB1-8671-B935-F850-109D7039496E",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16801792,
+            "displayName": "DE - Elena - jv4ca",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "5BA4CDB3-72CC-E53E-C781-F743D493DFE2",
+            "participantUUID": "5BA4CDB3-72CC-E53E-C781-F743D493DFE2",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16802816,
+            "displayName": "DE - Ashley - myybo",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "AAEF3DAA-6DDA-D024-4E2B-AAFA4F5F7372",
+            "participantUUID": "AAEF3DAA-6DDA-D024-4E2B-AAFA4F5F7372",
+            "customerKey": "",
+        },
+        {
+            "participantId": 16803840,
+            "displayName": "DE/EN - Isabella - ug8r4",
+            "muted": False,
+            "audio": "",
+            "isHost": False,
+            "isCoHost": "",
+            "isGuest": True,
+            "isHold": False,
+            "persistentID": "AE11CF49-A68B-AADB-DFAB-FC928370E462",
+            "participantUUID": "AE11CF49-A68B-AADB-DFAB-FC928370E462",
+            "customerKey": "",
+        },
+    ]
+    participant_list = [
+        participant["displayName"] for participant in participant_list_raw
+    ]
+
+    settings = {
+        "group_size": 3,
+        "minimal_group": 2,
+        "placeholder_rooms": 0,
+        "activate_language1": True,
+        "activate_language2": True,
+        "add_universal_to_language1": True,
+        "add_universal_to_language2": True,
+        "tags_nt": ["NT"],
+        "tags_hosts": ["Host"],
+        "tags_lang1": ["DE"],
+        "tags_lang2": ["EN"],
+    }
+
+    hosts, notriad, participants_in_groups = create_groups(participant_list, settings)
 
     # participant_list = np.load("300_participants_coregroup.npy")
     # hosts, notriad, participants_in_rooms = create_groups(participant_list)
-    # print(participants_in_rooms)
+    print(hosts, notriad, participants_in_groups)
