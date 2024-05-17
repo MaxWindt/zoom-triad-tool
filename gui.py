@@ -8,7 +8,7 @@ import clean_groups
 import clean_groups
 import webbrowser
 import util
-import gui_breakout_monitor
+import open_breakout_rooms
 
 __version__ = "beta 0.3.1"
 development_mode = False
@@ -196,7 +196,7 @@ def gui(page: ft.Page):
         b.update()
         try:
             # ... YOUR CODE HERE ... #
-            clean_groups.main(get_settings())
+            open_breakout_rooms.main(get_settings())
             t.value = "Done"
         except Exception as e:
             # ... PRINT THE ERROR MESSAGE ... #

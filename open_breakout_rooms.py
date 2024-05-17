@@ -173,7 +173,7 @@ def create_new_rooms(breakout_window):
         exit()
 
 
-def create_new_groups(settings):
+def main(settings):
     # Initiate
     st = time.time()
     page = util.start_web_module()
