@@ -6,14 +6,10 @@ import time
 
 import numpy as np
 import pyautogui
-import pyperclip
-import pywinauto
 import util
-from pywinauto.keyboard import send_keys
 
 
 def find_name(participant_list, name):
-    id_list = []
     name_list = []
     # find names with tags
     for i in range(len(name)):
