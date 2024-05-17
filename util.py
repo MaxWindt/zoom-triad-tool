@@ -1,3 +1,4 @@
+from playwright.sync_api import sync_playwright, expect
 import time
 import pyautogui
 import pygame
@@ -189,22 +190,23 @@ def get_time_left_in_breakouts():
 
 
 def start_web_module():
-
-    from playwright.sync_api import sync_playwright
-
     p = sync_playwright().start()
-
     browser = p.chromium.launch(headless=False)
-    page = browser.new_page()
-    page.goto(
-        "http://127.0.0.1:9999/meeting.html?name=TG9jYWwzLjUuMldpbjEwI2ZpcmVmb3gvMTI0LjA%3D&mn=3858026425&email=&pwd=1&role=0&lang=en-US&signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBLZXkiOiJVVWl3Mm84RkROcVlHRmZEMXh4TkRlMHhDQ25FdFpPb0wyODkiLCJzZGtLZXkiOiJVVWl3Mm84RkROcVlHRmZEMXh4TkRlMHhDQ25FdFpPb0wyODkiLCJpYXQiOjE3MTI2OTM5MjksImV4cCI6MTcxMjcwMTEyOSwibW4iOjM4NTgwMjY0MjUsInJvbGUiOjB9.sgCYG5VimWDylNANLe2LVl0WwY4gJqxikqhiJA9yLB8&china=0&sdkKey=UUiw2o8FDNqYGFfD1xxNDe0xCCnEtZOoL289"
+    context = browser.new_context(
+        locale="en-US",
     )
+    page = context.new_page()
+    page.goto(
+        "file:///C:/Users/Max/Documents/code/zoom-triad-tool-js-web-module/index.html"
+    )
+    expect(page.get_by_label("Enter Full Screen")).to_be_visible(timeout=10000)
+
+    page.get_by_label("Reclaim Host").click()
     return page
 
 
 def web_getCurrentUser(page):
     User = page.evaluate(
-        None,
         """() => {
             return new Promise(resolve => {
                 ZoomMtg.getCurrentUser({
@@ -219,52 +221,153 @@ def web_getCurrentUser(page):
     return User
 
 
-def assign_user_to_breakout_room(
+def web_remove_all_rooms(page):
+    # click workaround to open Breakout Room Window
+    page.evaluate(
+        """try {
+    var bParticipants = document.querySelector(
+      '[aria-label^="Breakout Rooms"]'
+    );
+    bParticipants.click();
+  } catch (error) {
+    console.error("Breakout Rooms Window already open", error);
+  }"""
+    )
+    page.get_by_role("button", name="Recreate").click()
+    page.get_by_label("Recreate").fill("0")
+    page.get_by_text("Assign manually").click()
+    page.get_by_role("button", name="Recreate").click()
+    page.get_by_role("listitem").locator("div").first.hover()
+    page.get_by_role("button", name="Delete").click()
+    page.get_by_label("Delete Room 1?").get_by_role("button", name="Delete").press(
+        "Enter"
+    )
+    page.get_by_role("button", name="Close").click()
+
+
+def web_openBreakoutRooms(page, breakout_options):
+
+    page.evaluate(
+        """breakout_options => {
+            ZoomMtg.openBreakoutRooms({
+            options: breakout_options,
+            error: function (error) {
+                console.error("Error occurred:", error);
+            },
+            success: function (success) {
+                console.log("Here are the breakouts!", success);
+            },
+        });
+        }
+        """,
+        breakout_options,
+    )
+
+
+def web_createBreakoutRooms(page, array):
+
+    # print(
+    page.evaluate(
+        """array => {
+            ZoomMtg.createBreakoutRoom({
+            data: array,
+            pattern: 3,
+            error: function (error) {
+                console.error("Error occurred:", error);
+            },
+            success: function (success) {
+                console.log("Here are the breakouts!", success);
+            },
+        });
+        }
+        """,
+        array,
+    )
+
+    time.sleep(0.1)
+
+
+def create_rooms(page, size_of_lang1, size_of_lang2, settings):
+    # Initialize an empty list to hold the room names
+    rooms = []
+    tags_lang1 = settings["tags_lang1"][0]
+    tags_lang2 = settings["tags_lang2"][0]
+    room_number = 1
+    # Add Teamroom
+    rooms.append(f"Teamroom")
+    room_number += 1
+    # Add No Triad Room
+    rooms.append(f"No Triad")
+    room_number += 1
+    # Add the Placeholder rooms
+    for _ in range(settings["placeholder_rooms"]):
+        rooms.append(f"Room {room_number}")
+        room_number += 1
+
+    # Add the Language 1 rooms with the provided DE tag
+    for _ in range(size_of_lang1):
+        rooms.append(f"Room {room_number} {tags_lang1}")
+        room_number += 1
+
+    # Add the Language 2 rooms with the provided EN tag
+    for _ in range(size_of_lang2):
+        rooms.append(f"Room {room_number} {tags_lang2}")
+        room_number += 1
+
+    # Add the final 10 rooms without any tags
+    for _ in range(100 - room_number):
+        rooms.append(f"Room {room_number}")
+        room_number += 1
+
+    web_createBreakoutRooms(page, rooms)
+    return rooms
+
+
+def web_assign_user_to_breakout_room(
     page, target_room_id, user_id, success_callback=None, error_callback=None
 ):
     return page.evaluate(
-        """(args) => {
-        return new Promise((resolve, reject) => {
+        """([targetRoomId, userId]) => {
             ZoomMtg.assignUserToBreakoutRoom({
-                success: (res) => {
-                    if (args.success) args.success(res);
-                    resolve(res);
+                targetRoomId: targetRoomId,
+                userId: userId,
+                error: (error) => {
+                    console.error("Error occurred:", error);
+                    
                 },
-                error: (err) => {
-                    if (args.error) args.error(err);
-                    reject(err);
+                success: (success) => {
+                    console.log("Here are the breakouts!", success);
                 },
-                targetRoomId: args.targetRoomId,
-                userId: args.userId
             });
-        });
-    }""",
-        {
-            "success": success_callback,
-            "error": error_callback,
-            "targetRoomId": target_room_id,
-            "userId": user_id,
-        },
+        }""",
+        [target_room_id, user_id],
     )
 
 
 def web_getBreakoutRooms(page):
+    time.sleep(0.5)  # wait to make sure SDK is ready
     Attendees = page.evaluate(
         """() => {
-            return new Promise(resolve => {
+            return new Promise((resolve) => {
                 ZoomMtg.getBreakoutRooms({
                     success: function(res) {
                         resolve(res);
                     },
                     error: function (error) {
-        reject(error);
-      },
+                        console.log(error);
+                    },
                 });
             });
-            }
-            """,
+        }"""
     )
     return Attendees["result"]
+
+
+def find_participantID(display_name, participant_list):
+    for participant in participant_list:
+        if participant["displayName"] == display_name:
+            return participant["participantId"]
+    return None
 
 
 def filter_participant_list(original_list):
@@ -288,4 +391,9 @@ def test():
 
 
 if __name__ == "__main__":
-    test()
+
+    page = start_web_module()
+    user = web_getCurrentUser(page)
+
+    Breakout_Rooms = web_getBreakoutRooms(page)
+    print(Breakout_Rooms)
