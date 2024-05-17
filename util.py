@@ -34,7 +34,7 @@ def delete_t_value(settings, tag):
 
 
 def send_keys_fast(value):
-    prev_value = pyperclip.paste()
+    # prev_value = pyperclip.paste()
     pyperclip.copy(value)
     pywinauto.keyboard.send_keys("^a^v")
     # pyperclip.copy(prev_value)
@@ -105,7 +105,7 @@ def send_text_to_zoom(text):
 
         app_menu = breakout_window.descendants(control_type="MenuItem")
         send_text_menu = app_menu[0]
-        send_voice_menu = app_menu[1]
+        # send_voice_menu = app_menu[1]
 
         number_of_buttons = len(app_buttons)
 
@@ -294,10 +294,10 @@ def create_rooms(page, size_of_lang1, size_of_lang2, settings):
     tags_lang2 = settings["tags_lang2"][0]
     room_number = 1
     # Add Teamroom
-    rooms.append(f"Teamroom")
+    rooms.append("Teamroom")
     room_number += 1
     # Add No Triad Room
-    rooms.append(f"No Triad")
+    rooms.append("No Triad")
     room_number += 1
     # Add the Placeholder rooms
     for _ in range(settings["placeholder_rooms"]):
@@ -381,13 +381,6 @@ def filter_participant_list(original_list):
         }
         extracted_list.append(extracted_item)
     return extracted_list
-
-
-def test():
-    browser = p.chromium.launch(headless=False, slow_mo=50)
-    page = browser.new_page()
-    page.goto("https://playwright.dev/")
-    page.screenshot(path="example.png")
 
 
 if __name__ == "__main__":
