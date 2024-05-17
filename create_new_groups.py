@@ -12,18 +12,6 @@ import util
 from pywinauto.keyboard import send_keys
 
 
-def get_breakout_participants_list(breakout_window):
-    participant_list = breakout_window.descendants(control_type="ListItem")
-    breakout_participants_list = []
-    for i in range(len(participant_list)):
-        parent = participant_list[i]
-        child = parent.children()[0]
-        child_child = child.children()[0]
-        child_child_child = child_child.children_texts()[0]
-        breakout_participants_list.extend([child_child_child])
-    return breakout_participants_list
-
-
 def find_name(participant_list, name):
     id_list = []
     name_list = []
@@ -129,42 +117,6 @@ def create_groups(participant_list, settings):
     return hosts, notriad, participants_in_groups, size_of_lang1
 
 
-def send_keys_fast(value):
-    prev_value = pyperclip.paste()
-    pyperclip.copy(value)
-    send_keys("^v")
-    pyperclip.copy(prev_value)
-
-
-def starting_position(breakout_window):
-    rect = breakout_window.Raum1Static.parent().rectangle()
-    breakout_window.set_focus()
-    pywinauto.mouse.click(
-        coords=(rect.left + 10, round(rect.top + (rect.bottom - rect.top) / 2))
-    )
-
-
-def rename_room(name):
-    send_keys("{TAB}{SPACE}")
-    send_keys_fast(name)
-    send_keys("{ENTER}{TAB}")
-
-
-# only room buttons accessable for more security
-def room_buttons_only(breakout_window):
-    room_buttons = breakout_window.descendants(control_type="Button")  # [1] = room 1
-    mark_to_del = []
-    for i in range(0, len(room_buttons) - 1):
-        name = room_buttons[i]._element_info.name
-        if name == "Umbenennen" or name == "Rename":
-            mark_to_del.extend([i, i + 1])  # & next Button "Löschen"
-    for i in sorted(mark_to_del, reverse=True):
-        del room_buttons[i]
-    # add something to index 0 to have same id in id&roomnr
-    room_buttons = ["close button disabled"] + room_buttons[1:-2]
-    return room_buttons
-
-
 def assign_participants_to_room(participants_arr, participant_list_raw, room_id, page):
     empty_seat = 0
     for name in participants_arr:
@@ -176,23 +128,6 @@ def assign_participants_to_room(participants_arr, participant_list_raw, room_id,
             empty_seat = empty_seat + 1
             if group_size - empty_seat < minimal_group:
                 break
-
-
-# return to starting position
-# send_keys("{ESC}+{TAB}+{TAB}+{TAB}")
-
-
-def next_room():
-    # focus next room and collaps
-    send_keys("{DOWN}{LEFT}")
-
-
-def update_list_positions(id_array, removed_ids):
-    for id in removed_ids:
-        if not np.isinf(id):
-            filter_arr = (id_array > id).astype(int)
-            id_array = id_array - filter_arr
-    return id_array
 
 
 def breakout_assignment(
