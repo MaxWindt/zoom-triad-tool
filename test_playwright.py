@@ -1,5 +1,5 @@
 import time
-from playwright.sync_api import Playwright, sync_playwright, expect
+from playwright.sync_api import sync_playwright, expect
 
 
 def run():
@@ -95,12 +95,12 @@ def disallow_unmute(page):
 
 
 if __name__ == "__main__":
-    page = run()
     import util
 
-    participants = util.web_getBreakoutRooms(page)
+    page = util.start_web_module()
 
-    participants = participants["unassigned"]
+    Breakout_Rooms = util.web_getBreakoutRooms(page)
+    participants = Breakout_Rooms["unassigned"]
     filtered_paticipants = util.filter_participant_list(participants)
     print(filtered_paticipants)
 
