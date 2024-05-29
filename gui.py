@@ -418,8 +418,7 @@ def gui(page: ft.Page):
                     t_info.value = f"{i}. Person"
                     if c_send_to_breakouts.value:
                         send_to_breakouts(t_send_to_breakouts.value.format(i=i))
-                    if c_ring_bell.value:
-                        util.make_a_sound()
+
                 elif i == t_rounds.value + 1:
                     duration = int(t_fadeout.value)
                     t_info.value = "Fadeout"
