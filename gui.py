@@ -5,7 +5,6 @@ import time
 import flet as ft
 import yaml
 import clean_groups
-import clean_groups
 import webbrowser
 import util
 import gui_breakout_monitor
@@ -48,7 +47,7 @@ t_send_to_breakouts = ft.TextField(
     value="{i}. person can start now ∞ {i}. Person kann jetzt beginnen"
 )
 t_send_to_breakouts_fadeout = ft.TextField(value="Fadeout ∞ Ausklingen")
-c_sync_time_with_zoom = ft.Checkbox(label="Sync Time with Zoom", value=True)
+
 
 email = "max@thesharing.space"
 
@@ -142,6 +141,7 @@ def gui(page: ft.Page):
             "dd_group_size": dd_group_size.value,
             "t_send_to_breakouts_fadeout": t_send_to_breakouts_fadeout.value,
             "t_send_to_breakouts": t_send_to_breakouts.value,
+            "c_sync_time_with_zoom": c_sync_time_with_zoom.selected,
             # Add more inputs here...
         }
 
@@ -165,6 +165,10 @@ def gui(page: ft.Page):
         t_send_to_breakouts.value = user_inputs.get(
             "t_send_to_breakouts", t_send_to_breakouts.value
         )
+        c_sync_time_with_zoom.selected = user_inputs.get(
+            "c_sync_time_with_zoom", c_sync_time_with_zoom.selected
+        )
+
         # Restore more inputs here...
 
         # Update the GUI controls with restored values
@@ -304,21 +308,23 @@ def gui(page: ft.Page):
 
     def enable_timer_inputs():
         b_start_timer.visible = True
-        b_stop_timer.disabled = True
+        b_stop_timer.visible = False
         t_checkin.disabled = False
         t_fadeout.disabled = False
         t_round_duration.disabled = False
         t_rounds.disabled = False
         b_timer_fullscreen.visible = False
+        c_sync_time_with_zoom.visible = True
 
     def disable_timer_inputs():
         b_start_timer.visible = False
-        b_stop_timer.disabled = False
+        b_stop_timer.visible = True
         t_checkin.disabled = True
         t_fadeout.disabled = True
         t_round_duration.disabled = True
         t_rounds.disabled = True
         b_timer_fullscreen.visible = True
+        c_sync_time_with_zoom.visible = False
 
     def push_timer_values_to_gui_timer_fullscreen():
         util.save_t_values(
@@ -358,7 +364,7 @@ def gui(page: ft.Page):
         global t_info
         start_time = time.time()
 
-        sync_time_with_zoom = c_sync_time_with_zoom.value
+        sync_time_with_zoom = c_sync_time_with_zoom.selected
         try:
             if sync_time_with_zoom:
                 # Define remaining total time
@@ -509,10 +515,23 @@ def gui(page: ft.Page):
     b_start_timer = ft.IconButton(
         icon=ft.icons.PLAY_ARROW_ROUNDED, on_click=start_timer
     )
-    b_stop_timer = ft.IconButton(icon=ft.icons.STOP, on_click=stop_timer)
+    b_stop_timer = ft.IconButton(icon=ft.icons.STOP, on_click=stop_timer, visible=False)
     b_timer_fullscreen = ft.IconButton(
         icon=ft.icons.OPEN_IN_FULL, on_click=open_timer_fullsize, visible=False
     )
+
+    def toggle_button(e):
+        e.control.selected = not e.control.selected
+        print(e.control.selected)
+        e.control.update()
+
+    c_sync_time_with_zoom = ft.IconButton(
+        icon=ft.icons.SYNC_DISABLED,
+        selected_icon=ft.icons.SYNC,
+        selected=True,
+        on_click=toggle_button,
+    )
+
     timer = ft.Column(
         scroll=ft.ScrollMode.ALWAYS,
         height=page.height,
@@ -520,7 +539,12 @@ def gui(page: ft.Page):
             ft.Row([t_info, t_currenttime], alignment=ft.MainAxisAlignment.CENTER),
             ft.Row([pb, l_total_time]),
             ft.Row(
-                [b_start_timer, b_stop_timer, b_timer_fullscreen],
+                [
+                    b_start_timer,
+                    b_stop_timer,
+                    b_timer_fullscreen,
+                    c_sync_time_with_zoom,
+                ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
             ft.Row(
@@ -605,7 +629,6 @@ def gui(page: ft.Page):
                         title=ft.Text("Fadeout started"),
                         subtitle=t_send_to_breakouts_fadeout,
                     ),
-                    ft.ListTile(title=c_sync_time_with_zoom),
                 ],
             ),
             ft.ExpansionTile(
