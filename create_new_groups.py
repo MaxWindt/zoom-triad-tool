@@ -8,6 +8,7 @@ import numpy as np
 import pyautogui
 import pyperclip
 import pywinauto
+import util
 from pywinauto.keyboard import send_keys
 
 
@@ -29,7 +30,7 @@ def find_name(participant_list, name):
     # find names with tags
     for i in range(len(name)):
         r = re.compile(name[i])
-        matches = list(filter(r.findall, participant_list)) # Read Note below
+        matches = list(filter(r.findall, participant_list))  # Read Note below
         name_list.extend(matches)
     return np.unique(name_list)
 
@@ -44,13 +45,13 @@ def split_into_groups_of(lst, group_size):
         rest = len(lst) % group_size
         empty_seats = group_size - rest if rest != 0 else 0
         round_list = np.concatenate((np.full(empty_seats, np.inf), lst))
-        split_list = np.split(round_list, len(round_list)/group_size)
+        split_list = np.split(round_list, len(round_list) / group_size)
     else:
         split_list = [np.full(group_size, np.inf)]
     return split_list
 
 
-def create_groups(participant_list,settings):
+def create_groups(participant_list, settings):
 
     global group_size
     global minimal_group
@@ -61,14 +62,16 @@ def create_groups(participant_list,settings):
     global tags_hosts
     global tags_lang1
     global tags_lang2
-    
 
     group_size = settings["group_size"]
     minimal_group = settings["minimal_group"]
     placeholder_rooms = settings["placeholder_rooms"]
     language1_active = settings["activate_language1"]
     language2_active = settings["activate_language2"]
-    add_universal_to_language = [settings["add_universal_to_language1"],settings["add_universal_to_language2"]]
+    add_universal_to_language = [
+        settings["add_universal_to_language1"],
+        settings["add_universal_to_language2"],
+    ]
     tags_nt = settings["tags_nt"]
     tags_hosts = settings["tags_hosts"]
     tags_lang1 = settings["tags_lang1"]
@@ -82,19 +85,20 @@ def create_groups(participant_list,settings):
     # filter Universal
     universal = np.intersect1d(lang1, lang2)
     # clean out hosts universal and NTs
-    lang1_clean = np.setdiff1d(
-        lang1, np.concatenate((universal, notriad, hosts)))
-    lang2_clean = np.setdiff1d(
-        lang2, np.concatenate((universal, notriad, hosts)))
+    lang1_clean = np.setdiff1d(lang1, np.concatenate((universal, notriad, hosts)))
+    lang2_clean = np.setdiff1d(lang2, np.concatenate((universal, notriad, hosts)))
 
-    no_tag = np.setdiff1d(participant_list, np.concatenate(
-        (universal, notriad, hosts, lang1_clean, lang2_clean)))
+    no_tag = np.setdiff1d(
+        participant_list,
+        np.concatenate((universal, notriad, hosts, lang1_clean, lang2_clean)),
+    )
     notag_uni = np.concatenate((universal, no_tag))
     # distribute universal
     if np.sum(add_universal_to_language) != 0:
         uni_split = np.array_split(
-            shuffle(notag_uni), np.sum(add_universal_to_language))
-            
+            shuffle(notag_uni), np.sum(add_universal_to_language)
+        )
+
     if add_universal_to_language[0]:
         lang1_final = np.concatenate((lang1_clean, uni_split[0]))
     else:
@@ -133,7 +137,8 @@ def starting_position(breakout_window):
     rect = breakout_window.Raum1Static.parent().rectangle()
     breakout_window.set_focus()
     pywinauto.mouse.click(
-        coords=(rect.left+10, round(rect.top+(rect.bottom-rect.top)/2)))
+        coords=(rect.left + 10, round(rect.top + (rect.bottom - rect.top) / 2))
+    )
 
 
 def rename_room(name):
@@ -144,17 +149,16 @@ def rename_room(name):
 
 # only room buttons accessable for more security
 def room_buttons_only(breakout_window):
-    room_buttons = breakout_window.descendants(
-        control_type="Button")  # [1] = room 1
+    room_buttons = breakout_window.descendants(control_type="Button")  # [1] = room 1
     mark_to_del = []
-    for i in range(0, len(room_buttons)-1):
+    for i in range(0, len(room_buttons) - 1):
         name = room_buttons[i]._element_info.name
-        if name == "Umbenennen":
-            mark_to_del.extend([i, i+1])  # & next Button "Löschen"
+        if name == "Umbenennen" or name == "Rename":
+            mark_to_del.extend([i, i + 1])  # & next Button "Löschen"
     for i in sorted(mark_to_del, reverse=True):
         del room_buttons[i]
     # add something to index 0 to have same id in id&roomnr
-    room_buttons = ["close button disabled"]+room_buttons[1:-2]
+    room_buttons = ["close button disabled"] + room_buttons[1:-2]
     return room_buttons
 
 
@@ -175,8 +179,9 @@ def assign_participants(breakout_window, participants_arr):
             if group_size - empty_seat < minimal_group:
                 break
 
+
 # return to starting position
-    # send_keys("{ESC}+{TAB}+{TAB}+{TAB}")
+# send_keys("{ESC}+{TAB}+{TAB}+{TAB}")
 
 
 def next_room():
@@ -188,30 +193,32 @@ def update_list_positions(id_array, removed_ids):
     for id in removed_ids:
         if not np.isinf(id):
             filter_arr = (id_array > id).astype(int)
-            id_array = id_array-filter_arr
+            id_array = id_array - filter_arr
     return id_array
 
 
-def breakout_assignment(hosts, notriad, participants_in_rooms, placeholder_rooms, breakout_window):
+def breakout_assignment(
+    hosts, notriad, participants_in_rooms, placeholder_rooms, breakout_window
+):
     breakout_buttons = room_buttons_only(breakout_window)  # [1] = room 1
 
     # main loop
     row = 0
-    for room in range(2+len(participants_in_rooms)):  # specialrooms+participant_rooms
+    for room in range(2 + len(participants_in_rooms)):  # specialrooms+participant_rooms
         if room == 0:
-            breakout_buttons[room+1].click()  # [1] = room 1
+            breakout_buttons[room + 1].click()  # [1] = room 1
             # rename_room("Teamroom")
             assign_participants(breakout_window, hosts)
-            #notriad = update_list_positions(notriad,hosts)
-            #participants_in_rooms = update_list_positions(participants_in_rooms,hosts)
+            # notriad = update_list_positions(notriad,hosts)
+            # participants_in_rooms = update_list_positions(participants_in_rooms,hosts)
             # next_room()
             # print(str(hosts).encode(sys.stdout.encoding, errors='replace'))
 
         elif room == 1:
-            breakout_buttons[room+1].click()  # [1] = room 1
-            #rename_room("No Triad")
+            breakout_buttons[room + 1].click()  # [1] = room 1
+            # rename_room("No Triad")
             assign_participants(breakout_window, notriad)
-            #participants_in_rooms = update_list_positions(participants_in_rooms,notriad)
+            # participants_in_rooms = update_list_positions(participants_in_rooms,notriad)
             # next_room()
             # print(str(notriad).encode(sys.stdout.encoding, errors='replace'))
 
@@ -222,10 +229,10 @@ def breakout_assignment(hosts, notriad, participants_in_rooms, placeholder_rooms
         #     # no clue why it is needed but this is the only way the first room collapses
         #     send_keys("{LEFT}")
         else:
-            breakout_buttons[room+placeholder_rooms+1].click()  # [1] = room 1
+            breakout_buttons[room + placeholder_rooms + 1].click()  # [1] = room 1
             participant_ids = participants_in_rooms[row]
             assign_participants(breakout_window, participant_ids)
-            #participants_in_rooms = update_list_positions(participants_in_rooms,participant_ids)
+            # participants_in_rooms = update_list_positions(participants_in_rooms,participant_ids)
             # print(participant_ids)
             row = row + 1
             # send_keys("{LEFT}")
@@ -235,12 +242,21 @@ def breakout_assignment(hosts, notriad, participants_in_rooms, placeholder_rooms
 
 
 def create_new_rooms(breakout_window):
-    if pyautogui.confirm(text='Do you want to replace your current breakouts?', title='Creating Breakouts', buttons=['OK', 'Cancel']) == 'OK':
+    if (
+        pyautogui.confirm(
+            text="Do you want to replace your current breakouts?",
+            title="Creating Breakouts",
+            buttons=["OK", "Cancel"],
+        )
+        == "OK"
+    ):
         breakout_buttons_2 = breakout_window.descendants(
-            control_type="Button")  # [1] = room 1
+            control_type="Button"
+        )  # [1] = room 1
         breakout_buttons_2[-3].click()
         breakout_buttons_2 = breakout_window.descendants(
-            control_type="Button")  # [1] = room 1
+            control_type="Button"
+        )  # [1] = room 1
         breakout_buttons_2[0].click()
     else:
         exit()
@@ -249,14 +265,10 @@ def create_new_rooms(breakout_window):
 def create_new_groups(settings):
     # Initiate
 
-    try:
-        app = pywinauto.Application(backend="uia").connect(
-            title_re="Breakout Sessions - Nicht begonnen")
-    except:
-        print("Error: Please open breakout window!")
+    if util.get_breakout_window("idle") == None:
+        print("Breakout window is not open")
         exit()
-    breakout_window = app.window(
-        title="Breakout Sessions - Nicht begonnen").wrapper_object()
+    breakout_window = util.get_breakout_window("idle")
 
     # create_new_rooms(breakout_window)
 
@@ -267,13 +279,14 @@ def create_new_groups(settings):
     breakout_buttons[1].click()
     participant_list = get_breakout_participants_list(breakout_window)
     # participant_list = np.load("300_participants_coregroup.npy")
-    hosts, notriad, participants_in_rooms = create_groups(participant_list,settings)
+    hosts, notriad, participants_in_rooms = create_groups(participant_list, settings)
     print()
     et1 = time.time()
     # get the start time
     st2 = time.time()
-    breakout_assignment(hosts, notriad, participants_in_rooms,
-                        placeholder_rooms, breakout_window)
+    breakout_assignment(
+        hosts, notriad, participants_in_rooms, placeholder_rooms, breakout_window
+    )
     # get the end time
     et2 = time.time()
     # get the end time
@@ -281,20 +294,20 @@ def create_new_groups(settings):
 
     # get the first execution time
     elapsed_time = et1 - st
-    print('Execution time creating groups:', elapsed_time, 'seconds')
+    print("Execution time creating groups:", elapsed_time, "seconds")
     # get the first execution time
     elapsed_time = et2 - st2
-    print('Execution time assigning:', elapsed_time, 'seconds')
+    print("Execution time assigning:", elapsed_time, "seconds")
 
     # get complete execution time
     elapsed_time = et - st
-    print('End:', elapsed_time, 'seconds')
+    print("End:", elapsed_time, "seconds")
     print()
 
 
 if __name__ == "__main__":
 
-    create_new_groups()
+    create_new_groups(settings="ss")
 
     # participant_list = np.load("300_participants_coregroup.npy")
     # hosts, notriad, participants_in_rooms = create_groups(participant_list)
