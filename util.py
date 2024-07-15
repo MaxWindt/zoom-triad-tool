@@ -55,9 +55,9 @@ def get_breakout_window(state="open"):
     """
 
     # initialize the breakout window
-    window_title_open = "Breakout Sessions - Im Gange|Breakout Rooms - In Progress"
+    window_title_open = "Breakout Sessions - Im Gange|Breakout rooms - In Progress"
     window_title_idle = (
-        "Breakout Sessions - Nicht begonnen|Breakout Rooms - Not Started"
+        "Breakout Sessions - Nicht begonnen|Breakout rooms - Not Started"
     )
 
     if state == "open":
