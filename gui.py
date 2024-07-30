@@ -429,20 +429,17 @@ def gui(page: ft.Page):
                     duration = int(t_fadeout.value)
                     t_info.value = "Fadeout"
                     page.update(t_info)
-                    if c_send_to_breakouts.value:
-                        send_to_breakouts(t_send_to_breakouts_fadeout.value)
                     if c_ring_bell.value:
                         util.make_a_sound()
-                        time.sleep(4)
                         util.make_a_sound()
+                    if c_send_to_breakouts.value:
+                        send_to_breakouts(t_send_to_breakouts_fadeout.value)
                 elif i == t_rounds.value + 2:
                     duration = 0
                     page.update(t_info)
                     if c_ring_bell.value:
                         util.make_a_sound()
-                        time.sleep(4)
                         util.make_a_sound()
-                        time.sleep(4)
                         util.make_a_sound()
                 else:
                     duration = int(t_round_duration.value)

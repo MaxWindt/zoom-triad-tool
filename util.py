@@ -1,3 +1,4 @@
+import time
 import pyautogui
 import pygame
 import pywinauto
@@ -93,6 +94,7 @@ def get_idle_breakout_window():
 
 def send_text_to_zoom(text):
     try:
+        # TODO: set app menu and other variables at the beginning. I think this is updated dynamically but fails, when the setup of the variables takes time.
         # initialize the breakout window
         breakout_window = get_breakout_window("open")
 
@@ -130,8 +132,9 @@ def make_a_sound():
     pygame.init()
     pygame.mixer.init()
     sound = pygame.mixer.Sound("zimbeln.mp3")
-    # sound.set_volume(0.5)   # Now plays at 50% of full volume.
+    sound.set_volume(0.5)  # Now plays at 50% of full volume.
     sound.play()
+    time.sleep(4)
 
 
 def share_external_audio():
