@@ -103,6 +103,8 @@ def send_text_to_zoom(text):
         sending_text_btn = app_buttons[-2]
         sending_text_btn.click()
 
+        print("clicked on sending_text_btn")
+
         app_menu = breakout_window.descendants(control_type="MenuItem")
         send_text_menu = app_menu[0]
         send_voice_menu = app_menu[1]
@@ -110,6 +112,8 @@ def send_text_to_zoom(text):
         number_of_buttons = len(app_buttons)
 
         click_input_no_movement(send_text_menu)
+
+        print("clicked on send_text_menu")
 
         send_keys_fast(text)
 
