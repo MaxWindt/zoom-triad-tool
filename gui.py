@@ -175,7 +175,11 @@ def gui(page: ft.Page):
         page.update()
 
     def open_settings(e):
-        webbrowser.open("settings.txt")
+        try:
+            webbrowser.open("settings.txt")
+        except:
+            reset_settings_file()
+            webbrowser.open("settings.txt")
 
     def open_room_monitor(e):
         subprocess.run(sys.executable + " gui_breakout_monitor.py", shell=True)
