@@ -27,7 +27,7 @@ def main(page: ft.Page):
         ),
     )
     page.add(data_table)
-    while os.path.isfile(util.temp_settings_filename):
+    while os.path.isfile(util.filename):
         # Room Details determine languages for the whole ID and reduce to [Room Nr, Language, Nr of participants]
         try:
             room_details = get_language_of_group(get_active_breakout_list())
