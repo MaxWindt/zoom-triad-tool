@@ -9,26 +9,29 @@ import pyperclip
 
 import json
 
-temp_settings_filename = "t_settings.json"
 
-
-def save_t_values(settings):
-    with open(temp_settings_filename, "w") as file:
+def save_t_values(settings, filename):
+    with open(filename, "w") as file:
         json.dump(settings, file)
 
 
-def load_t_values():
-    with open(temp_settings_filename, "r") as file:
+def load_t_values(filename):
+    with open(filename, "r") as file:
         settings = json.load(file)
     return settings
 
 
-def delete_t_value(settings, tag):
-    # Remove key from dictionary
-    del settings[tag]
+def delete_t_value(tag, filename):
+    # Load current settings from file
+    with open(filename, "r") as file:
+        settings = json.load(file)
 
-    # Serialize data and write back to file
-    with open(temp_settings_filename, "w") as file:
+    # Remove key from dictionary
+    if tag in settings:
+        del settings[tag]
+
+    # Save updated settings to file
+    with open(filename, "w") as file:
         json.dump(settings, file)
 
 
@@ -135,7 +138,7 @@ def send_text_to_zoom(text):
 def make_a_sound():
     pygame.init()
     pygame.mixer.init()
-    sound = pygame.mixer.Sound("zimbeln.mp3")
+    sound = pygame.mixer.Sound("zimbeln.mp3")  # -6db
     sound.set_volume(0.5)  # Now plays at 50% of full volume.
     sound.play()
     time.sleep(4)
