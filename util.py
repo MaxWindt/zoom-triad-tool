@@ -139,7 +139,7 @@ def make_a_sound():
     pygame.init()
     pygame.mixer.init()
     sound = pygame.mixer.Sound("zimbeln.mp3")  # -6db
-    sound.set_volume(0.5)  # Now plays at 50% of full volume.
+    # sound.set_volume(0.5)  # Now plays at 50% of full volume.
     sound.play()
     time.sleep(4)
 
