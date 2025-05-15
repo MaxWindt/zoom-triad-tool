@@ -57,7 +57,7 @@ The tool simulates manual input into Zoom, so it is essential to have a sufficie
 
 - The tool provides timer functions for ongoing breakout sessions.
 - Set the group size, time per person, total breakout time, and a duration time for the session start.
-- Notifications and sound cues are triggered at various points during the session.
+- Notifications and sound cues are triggered after every participant and event change.
 
 ## Contact and Support
 

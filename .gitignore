@@ -133,3 +133,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 playwright-log*
+*Start_Triad_Tool.bat
+rcc.exe
+temp_settings_*

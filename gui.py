@@ -51,6 +51,9 @@ t_send_to_breakouts_fadeout = ft.TextField(value="Fadeout ∞ Ausklingen")
 
 email = "max@thesharing.space"
 
+# unique filename
+t_settings_filename = f"temp_settings_{round(time.time())}.json"
+
 
 def safe_settings(e):
     old_settings = get_settings()
@@ -111,7 +114,7 @@ def gui(page: ft.Page):
     page.window_always_on_top = True
     page.window_width = 300
     page.window_height = 300
-    util.save_t_values({"open": True})
+    util.save_t_values({"open": True}, t_settings_filename)
 
     def window_event(e):
         if e.data == "close":
@@ -175,6 +178,9 @@ def gui(page: ft.Page):
         page.update()
 
     def open_settings(e):
+        if not os.path.exists("settings.txt"):
+            reset_settings_file()
+
         webbrowser.open("settings.txt")
 
     def open_room_monitor(e):
@@ -334,14 +340,21 @@ def gui(page: ft.Page):
                 "pb": pb.value,
                 "t_info": t_info.value,
                 "t_currenttime": t_currenttime.value,
-            }
+            },
+            t_settings_filename,
         )
 
     def open_timer_fullsize(e):
-        b_timer_fullscreen.disabled = True
-        util.save_t_values({"timer_running": True})
-        subprocess.run(sys.executable + " gui_timer_fullscreen.py", shell=True)
-        b_timer_fullscreen.disabled = False
+
+        util.save_t_values(
+            {"timer_running": True},
+            t_settings_filename,
+        )
+        process = subprocess.run(
+            [sys.executable, "gui_timer_fullscreen.py", t_settings_filename], shell=True
+        )
+
+        page.update()
 
     def start_timer(e):
         if l_total_time.value == "??:??":
@@ -353,7 +366,10 @@ def gui(page: ft.Page):
         total_time = update_total_time(e)
 
         # mark timer as started
-        util.save_t_values({"timer_running": True})
+        util.save_t_values(
+            {"timer_running": True},
+            t_settings_filename,
+        )
 
         disable_timer_inputs()
 
@@ -429,20 +445,17 @@ def gui(page: ft.Page):
                     duration = int(t_fadeout.value)
                     t_info.value = "Fadeout"
                     page.update(t_info)
-                    if c_send_to_breakouts.value:
-                        send_to_breakouts(t_send_to_breakouts_fadeout.value)
                     if c_ring_bell.value:
                         util.make_a_sound()
-                        time.sleep(4)
                         util.make_a_sound()
+                    if c_send_to_breakouts.value:
+                        send_to_breakouts(t_send_to_breakouts_fadeout.value)
                 elif i == t_rounds.value + 2:
                     duration = 0
                     page.update(t_info)
                     if c_ring_bell.value:
                         util.make_a_sound()
-                        time.sleep(4)
                         util.make_a_sound()
-                        time.sleep(4)
                         util.make_a_sound()
                 else:
                     duration = int(t_round_duration.value)
@@ -469,7 +482,10 @@ def gui(page: ft.Page):
             page.update(t_info)
             i += 1
             # Countdown loop
-            while util.load_t_values()["timer_running"] and time.time() < end_time:
+            while (
+                util.load_t_values(t_settings_filename)["timer_running"]
+                and time.time() < end_time
+            ):
                 total_end_time = start_time + total_time
                 remaining_time = end_time - time.time()
                 remaining_total_time = total_end_time - time.time()
@@ -486,7 +502,7 @@ def gui(page: ft.Page):
 
                 time.sleep(1)
                 # Check for "Stop Timer" button press
-                if not "timer_running" in util.load_t_values():
+                if not "timer_running" in util.load_t_values(t_settings_filename):
                     i = t_rounds.value + 1
                     total_time = 0
                     t_currenttime.value = "00:00"
@@ -504,8 +520,16 @@ def gui(page: ft.Page):
         page.update()
 
     def stop_timer(e):
-        settings = util.load_t_values()
-        util.delete_t_value(settings, "timer_running")
+        util.delete_t_value("timer_running", t_settings_filename)
+
+        # delete old temp files
+        for filename in os.listdir():
+            if (
+                filename.startswith("temp_settings_")
+                and filename.endswith(".json")
+                and not t_settings_filename
+            ):
+                os.remove(filename)
 
     t_rounds.on_change = update_total_time
     t_checkin.on_change = update_total_time
