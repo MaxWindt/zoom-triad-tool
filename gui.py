@@ -53,13 +53,13 @@ t_send_to_breakouts_fadeout = ft.TextField(value="Fadeout ∞ Ausklingen")
 t_titlecard_time = ft.TextField(
     value="00:30",
     width=80,
-    label="Break Time",
+    label="Time",
     label_style=ft.TextStyle(size=15),
     hint_text="HH:MM",
 )
 t_titlecard_image_path = ft.TextField(
     value="",
-    label="Image Path",
+    label="Image",
     read_only=True,
     expand=True,
 )
@@ -715,7 +715,7 @@ def gui(page: ft.Page):
             page.update()
 
     b_pick_titlecard_image = ft.ElevatedButton(
-        "Select Image",
+        "Select",
         icon=ft.icons.IMAGE,
         on_click=pick_titlecard_image,
     )
@@ -751,17 +751,18 @@ def gui(page: ft.Page):
                 initially_expanded=False,
                 controls=[
                     ft.ListTile(
-                        title=ft.Text("Break Duration"),
-                        subtitle=ft.Text("Enter time in HH:MM format"),
+                        title=ft.Text("End of Break"),
                         trailing=t_titlecard_time,
                     ),
-                    ft.ListTile(
-                        title=ft.Text("Image File"),
-                        subtitle=t_titlecard_image_path,
-                    ),
                     ft.Row(
-                        [b_pick_titlecard_image, b_open_titlecard],
+                        [
+                            t_titlecard_image_path,
+                            b_pick_titlecard_image,
+                        ],
                         alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    ft.ListTile(
+                        subtitle=b_open_titlecard,
                     ),
                 ],
             ),
