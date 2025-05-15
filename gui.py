@@ -49,6 +49,22 @@ t_send_to_breakouts = ft.TextField(
 t_send_to_breakouts_fadeout = ft.TextField(value="Fadeout ∞ Ausklingen")
 
 
+# Titlecard controls
+t_titlecard_time = ft.TextField(
+    value="00:30",
+    width=80,
+    label="Break Time",
+    label_style=ft.TextStyle(size=15),
+    hint_text="HH:MM",
+)
+t_titlecard_image_path = ft.TextField(
+    value="",
+    label="Image Path",
+    read_only=True,
+    expand=True,
+)
+
+
 email = "max@thesharing.space"
 
 # unique filename
@@ -145,6 +161,8 @@ def gui(page: ft.Page):
             "t_send_to_breakouts_fadeout": t_send_to_breakouts_fadeout.value,
             "t_send_to_breakouts": t_send_to_breakouts.value,
             "c_sync_time_with_zoom": c_sync_time_with_zoom.selected,
+            "t_titlecard_time": t_titlecard_time.value,
+            "t_titlecard_image_path": t_titlecard_image_path.value,
             # Add more inputs here...
         }
 
@@ -152,6 +170,8 @@ def gui(page: ft.Page):
 
     def restore_user_inputs():
         user_inputs = page.client_storage.get("user_inputs")
+        if not user_inputs:
+            return
 
         t_checkin.value = user_inputs.get("t_checkin", t_checkin.value)
         t_round_duration.value = user_inputs.get("t_round", t_round_duration.value)
@@ -171,8 +191,12 @@ def gui(page: ft.Page):
         c_sync_time_with_zoom.selected = user_inputs.get(
             "c_sync_time_with_zoom", c_sync_time_with_zoom.selected
         )
-
-        # Restore more inputs here...
+        t_titlecard_time.value = user_inputs.get(
+            "t_titlecard_time", t_titlecard_time.value
+        )
+        t_titlecard_image_path.value = user_inputs.get(
+            "t_titlecard_image_path", t_titlecard_image_path.value
+        )
 
         # Update the GUI controls with restored values
         page.update()
@@ -636,6 +660,72 @@ def gui(page: ft.Page):
         on_click=open_dlg_reset_settings,
     )
 
+    # Titlecard functions
+    def pick_titlecard_image(e):
+        def on_result(e: ft.FilePickerResultEvent):
+            if e.files and len(e.files) > 0:
+                t_titlecard_image_path.value = e.files[0].path
+                t_titlecard_image_path.update()
+                save_user_inputs()
+
+        file_picker = ft.FilePicker(on_result=on_result)
+        page.overlay.append(file_picker)
+        page.update()
+        file_picker.pick_files(
+            dialog_title="Pick an image for titlecard",
+            file_type=ft.FilePickerFileType.IMAGE,
+            allowed_extensions=["jpg", "jpeg", "png", "bmp"],
+        )
+
+    def open_titlecard(e):
+        # Validate time format
+        try:
+            time_parts = t_titlecard_time.value.split(":")
+            if len(time_parts) != 2 or not all(part.isdigit() for part in time_parts):
+                raise ValueError("Invalid time format")
+
+            # Check if image path exists
+            if not t_titlecard_image_path.value or not os.path.exists(
+                t_titlecard_image_path.value
+            ):
+                t.value = "Please select a valid image file first!"
+                page.snack_bar.open = True
+                page.update()
+                return
+
+            # Run the titlecard program
+            subprocess.Popen(
+                [
+                    sys.executable,
+                    "titlecard_image_with_breaktime.py",
+                    t_titlecard_time.value,
+                    t_titlecard_image_path.value,
+                ],
+                shell=True,
+            )
+            save_user_inputs()
+
+        except ValueError:
+            t.value = "Please enter a valid time in HH:MM format!"
+            page.snack_bar.open = True
+            page.update()
+        except Exception as ex:
+            t.value = f"Error: {str(ex)}"
+            page.snack_bar.open = True
+            page.update()
+
+    b_pick_titlecard_image = ft.ElevatedButton(
+        "Select Image",
+        icon=ft.icons.IMAGE,
+        on_click=pick_titlecard_image,
+    )
+
+    b_open_titlecard = ft.ElevatedButton(
+        "Open Titlecard",
+        icon=ft.icons.OPEN_IN_NEW,
+        on_click=open_titlecard,
+    )
+
     advanced_settings = ft.Column(
         scroll=ft.ScrollMode.ALWAYS,
         spacing=0,
@@ -652,6 +742,26 @@ def gui(page: ft.Page):
                     ft.ListTile(
                         title=ft.Text("Fadeout started"),
                         subtitle=t_send_to_breakouts_fadeout,
+                    ),
+                ],
+            ),
+            ft.ExpansionTile(
+                title=ft.Text("Titlecard", theme_style=ft.TextThemeStyle.TITLE_LARGE),
+                affinity=ft.TileAffinity.LEADING,
+                initially_expanded=False,
+                controls=[
+                    ft.ListTile(
+                        title=ft.Text("Break Duration"),
+                        subtitle=ft.Text("Enter time in HH:MM format"),
+                        trailing=t_titlecard_time,
+                    ),
+                    ft.ListTile(
+                        title=ft.Text("Image File"),
+                        subtitle=t_titlecard_image_path,
+                    ),
+                    ft.Row(
+                        [b_pick_titlecard_image, b_open_titlecard],
+                        alignment=ft.MainAxisAlignment.CENTER,
                     ),
                 ],
             ),
